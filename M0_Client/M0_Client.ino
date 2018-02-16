@@ -42,6 +42,7 @@ void setup()
     Serial.print("Set Freq to: "); Serial.println(FREQ);
     driver.setTxPower(23, false);
   }
+}
 
 // Dont put this on the stack:
 uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -82,9 +83,9 @@ void loop()
 void resetDevice()
 {
   // manual reset
-  int RGM95_RST 4
-  digitalWrite(RFM95_RST, LOW);
+  int pinReset = 4;
+  digitalWrite(pinReset, LOW);
   delay(10);
-  digitalWrite(RFM95_RST, HIGH);
+  digitalWrite(pinReset, HIGH);
   delay(10);
 }
