@@ -18,18 +18,27 @@ Adafruit_TMP007 tmp007;
 #define SERVER_ADDRESS 2
 #define FREQ 915.0
 
+/* for feather m0 */ 
+#define RFM95_CS 8
+#define RFM95_RST 4
+#define RFM95_INT 3
+
 // Singleton instance of the radio driver
-RH_RF95 driver;
+RH_RF95 driver(RFM95_CS, RFM95_INT);
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram manager(driver, SERVER_ADDRESS);
 
 void setup() 
 {
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
   Serial.begin(9600);
   //while (!Serial) ; // Wait for serial port to be available
+
   if (!manager.init())
   {
+    //driver.setModeTx()
     Serial.println("init failed");
   }
   else
@@ -40,7 +49,7 @@ void setup()
       while (1);
     }
     Serial.print("Set Freq to: "); Serial.println(FREQ);
-    driver.setTxPower(23, false);
+    //driver.setTxPower(23, false);
   }
 }
 
@@ -50,8 +59,11 @@ uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
 
 void loop()
 {
-  if (manager.available())
-  {
+if (manager.available())
+Serial.println("I'm available");
+else
+Serial.println("I'm not available");
+
     // Wait for a message addressed to us from the client
     uint8_t len = sizeof(buf);
     uint8_t from;
@@ -66,5 +78,5 @@ void loop()
       if (!manager.sendtoWait(data, sizeof(data), from))
         Serial.println("sendtoWait failed");
     }
-  }
+  delay(500);
 }

@@ -18,8 +18,13 @@ Adafruit_TMP007 tmp007;
 #define SERVER_ADDRESS 2
 #define FREQ 915.0
 
+/* for feather m0 */ 
+#define RFM95_CS 8
+#define RFM95_RST 4
+#define RFM95_INT 3
+
 // Singleton instance of the radio driver
-RH_RF95 driver;
+RH_RF95 driver(RFM95_CS, RFM95_INT);
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram manager(driver, CLIENT_ADDRESS);
@@ -27,38 +32,39 @@ RHReliableDatagram manager(driver, CLIENT_ADDRESS);
 void setup() 
 {
   Serial.begin(9600);
-  //while (!Serial) ; // Wait for serial port to be available
-  if (!manager.init())
-  {
-    Serial.println("init failed");
-  }
-  else
-  {
-    if (!driver.setFrequency(FREQ)) 
+  while (!Serial) ; // Wait for serial port to be available
+    if (!manager.init())
     {
-      Serial.println("setFrequency failed");
-      while (1);
+      Serial.println("init failed");
     }
-    Serial.print("Set Freq to: "); Serial.println(FREQ);
-    driver.setTxPower(23, false);
-  }
+    else
+    {
+      if (!driver.setFrequency(FREQ)) 
+      {
+        Serial.println("setFrequency failed");
+        while (1);
+      }
+      Serial.print("Set Freq to: "); Serial.println(FREQ);
+      driver.setTxPower(23, false);
+    }
 }
 
 // Dont put this on the stack:
 uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+uint8_t data[] = "Hi Mom! Look, no hands!";
 
 void loop()
 {
-  String tempStr = String(tmp007.readDieTempC());
-  char data[sizeof(tempStr)];
-  tempStr.toCharArray(data, sizeof(data));
-  
-  Serial.print("Object Temp#:      "); Serial.print(data); Serial.println("*C");
-  
+//  String tempStr = String(tmp007.readDieTempC());
+//  char data[sizeof(tempStr)];
+//  tempStr.toCharArray(data, sizeof(data));
+//  
+//  Serial.print("Object Temp#:      "); Serial.print(data); Serial.println("*C");
+//  
   Serial.println("Sending to rf95_reliable_datagram_server");
     
   // Send a message to manager_server
-  if (manager.sendtoWait((uint8_t *)data, sizeof(data), SERVER_ADDRESS))
+  if (manager.sendtoWait(data, sizeof(data), SERVER_ADDRESS))
   {
     // Now wait for a reply from the server
     uint8_t len = sizeof(buf);
@@ -75,17 +81,17 @@ void loop()
       Serial.println("No reply, is rf95_reliable_datagram_server running?");
     }
   }
-  else
-    Serial.println("sendtoWait failed");
+  else 
+      Serial.println("Send to wait failed");
   delay(500);
 }
 
-void resetDevice()
-{
-  // manual reset
-  int pinReset = 4;
-  digitalWrite(pinReset, LOW);
-  delay(10);
-  digitalWrite(pinReset, HIGH);
-  delay(10);
-}
+//void resetDevice()
+//{
+//  // manual reset
+//  int pinReset = 4;
+//  digitalWrite(pinReset, LOW);
+//  delay(10);
+//  digitalWrite(pinReset, HIGH);
+//  delay(10);
+//}

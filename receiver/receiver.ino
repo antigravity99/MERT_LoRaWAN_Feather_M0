@@ -64,8 +64,10 @@ void setup()
  
 void loop()
 {
+  delay(1000);
   if (rf95.available())
   {
+    Serial.println("is available");
     // Should be a message for us now   
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
