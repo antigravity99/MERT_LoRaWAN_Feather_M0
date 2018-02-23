@@ -11,17 +11,20 @@
 #include "Adafruit_TMP007.h"
 #include <SPI.h>
 #include <RH_RF95.h>
+#include "mert.h"
 
 Adafruit_TMP007 tmp007;
 
+#define SERVER_ADDRESS 0
 #define CLIENT_ADDRESS 1
-#define SERVER_ADDRESS 2
 #define FREQ 915.0
 
 /* for feather m0 */ 
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 3
+
+static const String DEVICE_TYPE = SERVER_TYPE;
 
 // Singleton instance of the radio driver
 RH_RF95 driver(RFM95_CS, RFM95_INT);
@@ -53,29 +56,29 @@ void setup()
   }
 }
 
-uint8_t data[] = "And hello back to you";
+uint8_t ackBuff[] = {1};
 // Dont put this on the stack:
 uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
 
 void loop()
 {
-if (manager.available())
-Serial.println("I'm available");
-else
-Serial.println("I'm not available");
+//if (manager.available())
+//Serial.println("I'm available");
+//else
+//Serial.println("I'm not available");
 
     // Wait for a message addressed to us from the client
     uint8_t len = sizeof(buf);
+//    Serial.println(len);
     uint8_t from;
     if (manager.recvfromAck(buf, &len, &from))
     {
-      Serial.print("got request from : 0x");
-      Serial.print(from, HEX);
-      Serial.print(": ");
+      Serial.print(from, DEC);
+      Serial.print(",");
       Serial.println((char*)buf);
 
       // Send a reply back to the originator client
-      if (!manager.sendtoWait(data, sizeof(data), from))
+      if (!manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
         Serial.println("sendtoWait failed");
     }
   delay(500);
