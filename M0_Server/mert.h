@@ -24,17 +24,6 @@
 
 uint8_t _sampleRate = 10;
 
-void serialEvent(String serialData);
-void processReq(request req);
-void serialEvent(String serialData);
-void processUpdateCmd(request req);
-void processRequestCmd(request req);
-void returnRequest(char key[], char value[]);
-void forwardMessage(uint8_t address, char message[]);
-void parseRequest(request *req, char* str);
-void printRequestStruct(request *req);
-
-
 typedef struct request
 {
   char message[255];
@@ -46,6 +35,20 @@ typedef struct request
   uint8_t isVerified = 0;
   uint8_t fullTransmission = 0;
 } request;
+
+void serialEvent(String serialData);
+void processReq(request req);
+uint8_t verifyChecksum(request *req, char *token);
+void serialEvent(String serialData);
+void processUpdateCmd(request req);
+void processRequestCmd(request req);
+void returnRequest(char key[], char value[]);
+void forwardMessage(uint8_t address, char message[]);
+void parseRequest(request *req, char* str);
+void printRequestStruct(request *req);
+
+
+
 
 String inputString = "";
 boolean stringComplete = false;
