@@ -19,10 +19,21 @@
 #define MY_TYPE "TEMP_MOTE"
 
 #define DEBUG_1
-//#define DEBUG_2
-//#define DEBUG_3
+#define DEBUG_2
+#define DEBUG_3
 
 uint8_t _sampleRate = 10;
+
+void serialEvent(String serialData);
+void processReq(request req);
+void serialEvent(String serialData);
+void processUpdateCmd(request req);
+void processRequestCmd(request req);
+void returnRequest(char key[], char value[]);
+void forwardMessage(uint8_t address, char message[]);
+void parseRequest(request *req, char* str);
+void printRequestStruct(request *req);
+
 
 typedef struct request
 {
@@ -36,15 +47,10 @@ typedef struct request
   uint8_t fullTransmission = 0;
 } request;
 
-
-void setup() 
-{
-  Serial.begin(9600);
-}
 String inputString = "";
 boolean stringComplete = false;
 
-void loop() 
+void checkSerial() 
 {
   while (Serial.available()) {
     if(stringComplete)

@@ -15,16 +15,12 @@
 
 Adafruit_TMP007 tmp007;
 
-#define SERVER_ADDRESS 0
-#define CLIENT_ADDRESS 1
 #define FREQ 915.0
 
 /* for feather m0 */ 
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 3
-
-static const String DEVICE_TYPE = SERVER_TYPE;
 
 // Singleton instance of the radio driver
 RH_RF95 driver(RFM95_CS, RFM95_INT);
@@ -62,6 +58,7 @@ uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
 
 void loop()
 {
+  checkSerial();
 //if (manager.available())
 //Serial.println("I'm available");
 //else
