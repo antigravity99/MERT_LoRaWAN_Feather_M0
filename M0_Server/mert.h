@@ -8,12 +8,14 @@
 #define VIBRATION_KEY "VIBRATION"
 #define SAMPLE_RATE_KEY "SAMPLE_RATE"
 
-#define REQUEST_RESPONSE "REQ_RES"
+
 #define SOF "!!"
 #define EOF "**\n"
 
-#define REQUEST_CMD 'R'
-#define UPDATE_CMD 'U'
+#define REQUEST_CMD "R"
+#define UPDATE_CMD "U"
+#define SEND_CMD "S"
+#define REQUEST_RESPONSE_CMD "Q"
 
 #define SERVER_ADDRESS 0
 #define MY_ADDRESS 0
@@ -50,9 +52,6 @@ class Mert
     uint8_t _sampleRate = 10;
     String _inputString = "";
     boolean _stringComplete = false;
-    uint8_t _ackBuff[2] = {1};
-    // Dont put this on the stack:
-    uint8_t _rcvBuf[RH_RF95_MAX_MESSAGE_LEN];
     // Singleton instance of the radio driver
     RH_RF95 _driver = RH_RF95(RFM95_CS, RFM95_INT);
     // Class to manage message delivery and receipt, using the driver declared above
@@ -60,6 +59,9 @@ class Mert
     
   public:
     Mert();
+    // Dont put this on the stack:
+    uint8_t rcvBuf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t sendBuff[256];
     void checkSerial();
     char checksum(char* s);
     void serialEvent(String serialData);
@@ -67,12 +69,13 @@ class Mert
     uint8_t verifyChecksum(request *req, char *token);
     void processUpdateCmd(request req);
     void processRequestCmd(request req);
-    void returnRequest(char key[], char value[]);
+    void returnRequest(char req[], char cmd[], char key[], char value[]);
     void forwardMessage(uint8_t address, char message[]);
     void parseRequest(request *req, char* str);
     void printRequestStruct(request *req);
-    bool sendtoWait(uint8_t* buf, uint8_t len, uint8_t address);
+    bool sendtoWait(String data);
     bool recvfromAckTimeout();
+    bool recvfromAck();
     bool managerInit();
   
 };

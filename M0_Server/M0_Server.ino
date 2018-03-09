@@ -31,17 +31,10 @@ void setup()
 }
 
 void loop()
-{
-    
-    if (mert.recvfromAckTimeout())
+{   
+    if (mert.recvfromAck())
     {
-//      Serial.print(from, DEC);
-//      Serial.print(",");
-//      Serial.println((char*)buf);
-
-      // Send a reply back to the originator client
-//      if (!manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
-//        Serial.println("sendtoWait failed");
+      Serial.println("WoooHoo!");
     }
   delay(500);
 }

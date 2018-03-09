@@ -26,19 +26,71 @@ bool Mert::managerInit()
   return true;
 }
 
-bool Mert::sendtoWait(uint8_t* buf, uint8_t len, uint8_t address)
+bool Mert::sendtoWait(String data)
 {
-  
+  Serial.println("Sending to rf95_reliable_datagram_server");
+    data = data + "," + MY_TYPE;
+    char buff[data.length()+1];
+    data.toCharArray(buff,(data.length()+1));
+
+    char req[251];    
+    returnRequest(req, SEND_CMD, TEMP_KEY, buff);
+    
+  // Send a message to manager_server
+  if (_manager.sendtoWait((uint8_t*)req, sizeof(req), SERVER_ADDRESS))
+  {
+
+    
+     
+    // Now wait for a reply from the server
+    uint8_t len = sizeof(rcvBuf);
+    uint8_t from;   
+    if (_manager.recvfromAckTimeout(rcvBuf, &len, 2000, &from))
+    {
+      Serial.print("got reply from : 0x");
+      Serial.print(from, HEX);
+      Serial.print(": ");
+      Serial.println((char*)rcvBuf);
+    }
+    else
+    {
+      Serial.println("No reply, is rf95_reliable_datagram_server running?");
+    }
+  }
+  else
+    Serial.println("sendtoWait failed");
 }
 bool Mert::recvfromAckTimeout()
 {
  // Wait for a message addressed to us from the client
-    uint8_t len = sizeof(_rcvBuf);
+    uint8_t len = sizeof(rcvBuf);
     uint8_t from;
-    if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
+    if (_manager.recvfromAckTimeout(rcvBuf, &len, 2000, &from))
     { 
       
     }
+}
+
+bool Mert::recvfromAck()
+{
+
+  // Wait for a message addressed to us from the client
+      uint8_t len = sizeof(rcvBuf);
+      uint8_t from;
+      
+  if (_manager.recvfromAck(rcvBuf, &len, &from))
+    {     
+      Serial.print(from, DEC);
+      Serial.print(",");
+      Serial.println((char*)rcvBuf);
+      Serial.println(sizeof((char*)rcvBuf));
+
+       //Send a reply back to the originator client
+       uint8_t ackBuff[] = "ack";
+      if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
+        Serial.println("sendtoWait failed");        
+    }
+    
 }
 
 void Mert::checkSerial() 
@@ -131,10 +183,10 @@ void Mert::processReq(request req)
 
   switch((int)req.cmd[0])
   {
-    case (int)UPDATE_CMD:
+    case (int)UPDATE_CMD[0]:
       processUpdateCmd(req);
       break;
-    case (int)REQUEST_CMD:
+    case (int)REQUEST_CMD[0]:
 #ifdef DEBUG_2
       Serial.println("Got a request Command");
 #endif
@@ -171,32 +223,35 @@ void Mert::processRequestCmd(request req)
 #endif
   
   if(strcmp(req.key, TYPE_KEY) == 0)
-    returnRequest(TYPE_KEY, MY_TYPE);
+  {
+    char req[251];
+    returnRequest(req, REQUEST_RESPONSE_CMD, TYPE_KEY, MY_TYPE);
+  }
+    
 }
 
-void Mert::returnRequest(char key[], char value[])
+void Mert::returnRequest(char req[], char cmd[], char key[], char value[])
 {
-  char buff[255];
-  strcpy(buff, SOF);
-  strcat(buff, ",");
+  strcpy(req, SOF);
+  strcat(req, ",");
   char add[16];
-  strcat(buff, itoa(SERVER_ADDRESS, add, 10)); 
-  strcat(buff, ",");
-  strcat(buff, REQUEST_RESPONSE);
-  strcat(buff, ",");
-  strcat(buff, key);
-  strcat(buff, ",");
-  strcat(buff, value);
-  signed char sum = checksum(buff);
+  strcat(req, itoa(SERVER_ADDRESS, add, 10)); 
+  strcat(req, ",");
+  strcat(req, cmd);
+  strcat(req, ",");
+  strcat(req, key);
+  strcat(req, ",");
+  strcat(req, value);
+  signed char sum = checksum(req);
   char strSum[8];
   itoa(sum, strSum, 10);
-  strcat(buff, ",");
-  strcat(buff, strSum);
-  strcat(buff, ",");
-  strcat(buff, EOF);
+  strcat(req, ",");
+  strcat(req, strSum);
+  strcat(req, ",");
+  strcat(req, EOF);
 #ifdef DEBUG_1
   Serial.println("Send response message:");
-  Serial.println(buff);
+  Serial.println(req);
 #endif
 Serial.println("END");
 }
