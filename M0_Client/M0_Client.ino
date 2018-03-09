@@ -10,8 +10,6 @@
 #include <SPI.h>
 #include "Mert.h"
 
-
-
 Adafruit_TMP007 tmp007;
 
 Mert mert;
@@ -20,6 +18,8 @@ static const String DEVICE_TYPE = HUMIDITY_KEY;
 
 void setup() 
 {
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
   Serial.begin(9600);
   if (!mert.managerInit())
   {
@@ -30,29 +30,22 @@ void setup()
 
 void loop()
 {
-// 
-//  String tempStr = String(tmp007.readDieTempC());
-//  tempStr = tempStr + "," + DEVICE_TYPE;
-//  char data[tempStr.length()+1];
-//  tempStr.toCharArray(data, sizeof(data));
-//  
-//    Serial.println("Sending to rf95_reliable_datagram_server");
-//
-//  // Send a message to manager_server
-//  if (manager.sendtoWait((uint8_t *)data, sizeof(data), SERVER_ADDRESS))
-//  {
-//    // Now wait for a reply from the server
-//    if (manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
-//    { 
-//      if(from == SERVER_ADDRESS && _rcvBuf[0] == 1)
-//        Serial.println("Acknowledged");
-//    }
-//    else
-//    {
-//      Serial.println("No reply, is rf95_reliable_datagram_server running?");
-//    }
-//  }
-//  else 
-//      Serial.println("Send to wait failed");
+  String s = "data";
+  // Send a message to manager_server
+  if (mert.sendtoWait(s))
+  {
+    
+  }
   delay(500);
 }
+
+
+
+
+
+
+
+
+
+
+
