@@ -1,0 +1,82 @@
+#include <Arduino.h>
+#include <RHReliableDatagram.h>
+#include <RH_RF95.h>
+
+
+#define HUMIDITY_KEY "HUMIDITY"
+#define TEMP_KEY "TEMP"
+#define TYPE_KEY "TYPE"
+#define VIBRATION_KEY "VIBRATION"
+#define SAMPLE_RATE_KEY "SAMPLE_RATE"
+
+
+#define SOF "!!"
+#define EOF "**\n"
+
+#define REQUEST_CMD "R"
+#define UPDATE_CMD "U"
+#define SEND_CMD "S"
+#define REQUEST_RESPONSE_CMD "Q"
+
+#define SERVER_ADDRESS 0
+#define MY_ADDRESS 0
+
+#define MY_TYPE "SERVER"
+
+/* for feather m0 */
+#define RFM95_CS 8
+#define RFM95_RST 4
+#define RFM95_INT 3
+
+#define FREQ 915.0
+
+#define DEBUG_1
+#define DEBUG_2
+#define DEBUG_3
+
+typedef struct request
+{
+  char message[255];
+  uint8_t address = -1;
+  char cmd[2];
+  char key[63];
+  char value[63];
+  char checksum[15];
+  uint8_t isVerified = 0;
+  uint8_t fullTransmission = 0;
+} request;
+
+class Mert
+{
+
+  private:
+    uint8_t _sampleRate = 10;
+    String _inputString = "";
+    boolean _stringComplete = false;
+    // Singleton instance of the radio driver
+    RH_RF95 _driver = RH_RF95(RFM95_CS, RFM95_INT);
+    // Class to manage message delivery and receipt, using the driver declared above
+    RHReliableDatagram _manager = RHReliableDatagram(_driver, SERVER_ADDRESS);
+
+  public:
+    Mert();
+    // Dont put this on the stack:
+    uint8_t rcvBuf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t sendBuff[256];
+    void checkSerial();
+    char checksum(char* s);
+    void serialEvent(String serialData);
+    void processReq(request req);
+    uint8_t verifyChecksum(request *req, char *token);
+    void processUpdateCmd(request req);
+    void processRequestCmd(request req);
+    void returnRequest(char req[], char cmd[], char key[], char value[]);
+    void forwardMessage(uint8_t address, char message[]);
+    void parseRequest(request *req, char* str);
+    void printRequestStruct(request *req);
+    bool sendtoWait(String data);
+    bool recvfromAckTimeout();
+    bool recvfromAck();
+    bool managerInit();
+
+};

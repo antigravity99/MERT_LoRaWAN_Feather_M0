@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:\\Users\\Josh Lentz\\AppData\\Local\\Arduino15\\packages\\adafruit\\hardware\\samd\\1.0.22\\cores\\arduino"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false,
+                "path": [
+                    "C:\\Users\\Josh Lentz\\AppData\\Local\\Arduino15\\packages\\adafruit\\hardware\\samd\\1.0.22\\cores\\arduino"
+                ]
+            },
+            "intelliSenseMode": "msvc-x64"
+        }
+    ],
+    "version": 3
+}
