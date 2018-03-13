@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <RHReliableDatagram.h>
 #include <RH_RF95.h>
+#include <ArduinoJson.h>
 
 
 #define HUMIDITY_KEY "HUMIDITY"
@@ -46,6 +47,15 @@ typedef struct request
   uint8_t fullTransmission = 0;
 } request;
 
+typedef struct reqJson
+{
+  uint8_t address = -1;
+  String cmd;
+  String key;
+  String value;
+  String checksum;
+} reqJson;
+
 class Mert
 {
 
@@ -72,7 +82,8 @@ class Mert
     void processRequestCmd(request req);
     void returnRequest(char req[], char cmd[], char key[], char value[]);
     void forwardMessage(uint8_t address, char message[]);
-    void parseRequest(request *req, char* str);
+    void parseRequest(request *req, char* str);//maybe able to delete this
+    void parseJsonRequest(reqJson *req, char* str);
     void printRequestStruct(request *req);
     bool sendtoWait(String data);
     bool recvfromAckTimeout();

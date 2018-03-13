@@ -5,7 +5,6 @@
 // It is designed to work with the other example rf95_reliable_datagram_client
 // Tested with Anarduino MiniWirelessLoRa, Rocket Scream Mini Ultra Pro with the RFM95W
 
-
 #include <Wire.h>
 #include <Adafruit_TMP007.h>
 #include <SPI.h>
@@ -48,6 +47,7 @@ void server()
   {
     Serial.println("WoooHoo!");
   }
+  mert.checkSerial();
 delay(500);
 }
 
