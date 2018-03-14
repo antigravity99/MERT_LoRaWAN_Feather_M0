@@ -16,11 +16,16 @@ void server();
 void client();
 
 Adafruit_TMP007 tmp007;
-
 Mert mert;
 
 void setup()
 {
+
+  if (isServer)
+    mert.init(String(SERVER_TYPE), SERVER_ADDRESS);
+  else
+    mert.init(String(AMB_TEMP_TYPE), 1);
+
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
   Serial.begin(9600);
@@ -53,9 +58,14 @@ delay(500);
 
 void client()
 {
-  String s = "data";
+  ReqJson req;
+  req.address = mert.getMoteAddress();
+  req.cmd = SEND_CMD;
+  req.key = TEMP_KEY;
+  req.value = "Some sensor reading value";
+
   // Send a message to manager_server
-  if (mert.sendtoWait(s))
+  if (mert.sendtoWait(req))
   {
 
   }

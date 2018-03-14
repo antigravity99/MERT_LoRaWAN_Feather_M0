@@ -2,7 +2,21 @@
 
 Mert::Mert()
 {
+}
 
+void Mert::init(String moteType, uint8_t moteAddress)
+{
+  _moteType = moteType;
+  _moteAddress = moteAddress;
+}
+String Mert::getMoteType()
+{
+  return _moteType;
+}
+
+uint8_t Mert::getMoteAddress()
+{
+  return _moteAddress;
 }
 
 bool Mert::managerInit()
@@ -26,31 +40,38 @@ bool Mert::managerInit()
   return true;
 }
 
-bool Mert::sendtoWait(String data)
+bool Mert::sendtoWait(ReqJson data)
 {
-  Serial.println("Sending to rf95_reliable_datagram_server");
-    data = data + "," + MY_TYPE;
-    char buff[data.length()+1];
-    data.toCharArray(buff,(data.length()+1));
+    Serial.println("Sending to rf95_reliable_datagram_server");
+    // data = data + "," + MY_TYPE;
+    // char buff[data.length()+1];
+    // data.toCharArray(buff,(data.length()+1));
+
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& root = jsonBuffer.createObject();
+    root[ADDRESS] = data.address;
+    root[CMD] = data.cmd;
+    root[KEY] = data.key;
+    root[VALUE] = data.value;
+    root[CHECKSUM] = data.checksum;
 
     char req[251];
-    returnRequest(req, SEND_CMD, TEMP_KEY, buff);
+    root.printTo((char*)req, root.measureLength()+1);
+
+    //returnRequest(req, SEND_CMD, TEMP_KEY, buff);
 
   // Send a message to manager_server
   if (_manager.sendtoWait((uint8_t*)req, sizeof(req), SERVER_ADDRESS))
   {
-
-
-
     // Now wait for a reply from the server
-    uint8_t len = sizeof(rcvBuf);
+    uint8_t len = sizeof(_rcvBuf);
     uint8_t from;
-    if (_manager.recvfromAckTimeout(rcvBuf, &len, 2000, &from))
+    if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
     {
       Serial.print("got reply from : 0x");
       Serial.print(from, HEX);
       Serial.print(": ");
-      Serial.println((char*)rcvBuf);
+      Serial.println((char*)_rcvBuf);
     }
     else
     {
@@ -64,9 +85,9 @@ bool Mert::sendtoWait(String data)
 bool Mert::recvfromAckTimeout()
 {
  // Wait for a message addressed to us from the client
-    uint8_t len = sizeof(rcvBuf);
+    uint8_t len = sizeof(_rcvBuf);
     uint8_t from;
-    if (_manager.recvfromAckTimeout(rcvBuf, &len, 2000, &from))
+    if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
     {
 
     }
@@ -76,15 +97,15 @@ bool Mert::recvfromAck()
 {
 
   // Wait for a message addressed to us from the client
-      uint8_t len = sizeof(rcvBuf);
+      uint8_t len = sizeof(_rcvBuf);
       uint8_t from;
 
-  if (_manager.recvfromAck(rcvBuf, &len, &from))
+  if (_manager.recvfromAck(_rcvBuf, &len, &from))
     {
       Serial.print(from, DEC);
       Serial.print(",");
-      Serial.println((char*)rcvBuf);
-      Serial.println(sizeof((char*)rcvBuf));
+      Serial.println((char*)_rcvBuf);
+      Serial.println(sizeof((char*)_rcvBuf));
 
        //Send a reply back to the originator client
        uint8_t ackBuff[] = "ack";
@@ -152,9 +173,9 @@ void Mert::serialEvent(String serialData)
   Serial.println(serialData);
 #endif
 
-  request req;
+  // request req;
 
-  reqJson jReq;
+  ReqJson jReq;
 
   int len = serialData.length();
   char buff[len+1];
@@ -182,20 +203,20 @@ void Mert::serialEvent(String serialData)
     // processReq(req);
 }
 
-void Mert::processReq(request req)
+void Mert::processReq(ReqJson req)
 {
 #ifdef DEBUG_3
   Serial.print("cmd: ");
-  Serial.println(req.cmd[0]);
+  Serial.println(req.cmd);
   Serial.print("cmd to int: ");
-  Serial.println((int)req.cmd[0]);
+  Serial.println((int)req.cmd.charAt(0));
   Serial.print("#define update: ");
   Serial.println(UPDATE_CMD);
   Serial.print("#define update to int: ");
   Serial.println((int)UPDATE_CMD);
 #endif
 
-  switch((int)req.cmd[0])
+  switch((int)req.cmd.charAt(0))
   {
     case (int)UPDATE_CMD[0]:
       processUpdateCmd(req);
@@ -212,14 +233,14 @@ void Mert::processReq(request req)
   }
 }
 
-void Mert::processUpdateCmd(request req)
+void Mert::processUpdateCmd(ReqJson req)
 {
 #ifdef DEBUG_1
   Serial.println("Got an update Command");
 #endif
 
-  if(strcmp(req.key, SAMPLE_RATE_KEY) == 0)
-    _sampleRate = atoi(req.value);
+  if(req.key == String(SAMPLE_RATE_KEY))
+    _sampleRate = req.value.toInt();
 
 #ifdef DEBUG_1
   Serial.print("_sampleRate: ");
@@ -228,7 +249,7 @@ void Mert::processUpdateCmd(request req)
 
 }
 
-void Mert::processRequestCmd(request req)
+void Mert::processRequestCmd(ReqJson req)
 {
 #ifdef DEBUG_1
   Serial.println("Got a request Command");
@@ -236,39 +257,43 @@ void Mert::processRequestCmd(request req)
   Serial.println(req.key);
 #endif
 
-  if(strcmp(req.key, TYPE_KEY) == 0)
+  if(req.key == String(TYPE_KEY))
   {
-    char req[251];
-    returnRequest(req, REQUEST_RESPONSE_CMD, TYPE_KEY, MY_TYPE);
+#ifdef DEBUG_1
+    Serial.print("Process CMD type: ");
+    Serial.println(TYPE_KEY);
+#endif
+    // char req[251];
+    // returnRequest(req, REQUEST_RESPONSE_CMD, TYPE_KEY, MY_TYPE);
   }
 
 }
 
-void Mert::returnRequest(char req[], char cmd[], char key[], char value[])
-{
-  strcpy(req, SOF);
-  strcat(req, ",");
-  char add[16];
-  strcat(req, itoa(SERVER_ADDRESS, add, 10));
-  strcat(req, ",");
-  strcat(req, cmd);
-  strcat(req, ",");
-  strcat(req, key);
-  strcat(req, ",");
-  strcat(req, value);
-  signed char sum = checksum(req);
-  char strSum[8];
-  itoa(sum, strSum, 10);
-  strcat(req, ",");
-  strcat(req, strSum);
-  strcat(req, ",");
-  strcat(req, EOF);
-#ifdef DEBUG_1
-  Serial.println("Send response message:");
-  Serial.println(req);
-#endif
-Serial.println("END");
-}
+// void Mert::returnRequest(char req[], char cmd[], char key[], char value[])
+// {
+//   strcpy(req, SOF);
+//   strcat(req, ",");
+//   char add[16];
+//   strcat(req, itoa(SERVER_ADDRESS, add, 10));
+//   strcat(req, ",");
+//   strcat(req, cmd);
+//   strcat(req, ",");
+//   strcat(req, key);
+//   strcat(req, ",");
+//   strcat(req, value);
+//   signed char sum = checksum(req);
+//   char strSum[8];
+//   itoa(sum, strSum, 10);
+//   strcat(req, ",");
+//   strcat(req, strSum);
+//   strcat(req, ",");
+//   strcat(req, EOF);
+// #ifdef DEBUG_1
+//   Serial.println("Send response message:");
+//   Serial.println(req);
+// #endif
+// Serial.println("END");
+// }
 
 
 void Mert::forwardMessage(uint8_t address, char message[])
@@ -277,9 +302,10 @@ void Mert::forwardMessage(uint8_t address, char message[])
   Serial.println(message);
   Serial.print("To address: ");
   Serial.println(address);
+  Serial.println("Not yet implemented");
 }
 
-void Mert::parseJsonRequest(reqJson *req, char *json)
+void Mert::parseJsonRequest(ReqJson *req, char *json)
 {
    StaticJsonBuffer<200> jsonBuffer;
   JsonObject &root = jsonBuffer.parseObject(json);
@@ -293,114 +319,108 @@ void Mert::parseJsonRequest(reqJson *req, char *json)
 
 }
 
-void Mert::parseRequest(request *req, char* str)
+// void Mert::parseRequest(request *req, char* str)
+// {
+//   strcpy(req->message, str);
+//
+// #ifdef DEBUG_3
+//   Serial.print("Message: ");
+//   Serial.println(str);
+// #endif
+//
+//
+//   const char s[2] = ",";
+//   char *token;
+//   uint8_t i = 0;
+//   /* get the first token */
+//   token = strtok(str, s);
+//   /* walk through other tokens */
+//
+// #ifdef DEBUG_3
+//   Serial.print(i);
+//   Serial.print(" - token: ");
+//   Serial.println(token);
+// #endif
+//
+//   while( token != NULL )
+//   {
+//     if((i == 0) && (strcmp(token, SOF) != 0))
+//     {
+//       Serial.println(token);
+//       Serial.println("SOF bad!");
+//       return;
+//     }
+//
+//     switch(i)
+//     {
+//       case 1:
+//       {
+//         char buff[strlen(token)];
+//         strcpy(buff, token);
+//         req->address = atoi(buff);
+//       }break;
+//       case 2:
+//         strcpy(req->cmd, token);
+//         break;
+//       case 3:
+//         strcpy(req->key, token);
+//       break;
+//       case 4:
+//         strcpy(req->value, token);
+//         break;
+//       case 5:
+//         strcpy(req->checksum, token);
+//         verifyChecksum(req, token);
+//         break;
+//       case 6:
+//         if(strcmp(token, EOF) == 0)
+//           req->fullTransmission = 1;
+//       default:
+//         break;
+//     }
+//     i++;
+//     token = strtok(NULL, s);
+//   }
+//     printRequestStruct(req);
+// }
+
+void Mert::verifyChecksum(ReqJson *req, char *token)
 {
+  // String address = String(req->address);
+  // //for the 2 !! and the 4 commas
+  // uint8_t l1 = 6;
+  // uint8_t l2 = address.length();
+  // uint8_t l3 = req->cmd.length();
+  // uint8_t l4 = req->key.length();
+  // uint8_t l5 = req->value.length();
+  // uint8_t len = l1 + l2 + l3 + l4 + l5;
+  // char reqStr[len+1];
 
-
-
-  strcpy(req->message, str);
-
-#ifdef DEBUG_3
-  Serial.print("Message: ");
-  Serial.println(str);
-#endif
-
-
-  const char s[2] = ",";
-  char *token;
-  uint8_t i = 0;
-  /* get the first token */
-  token = strtok(str, s);
-  /* walk through other tokens */
-
-#ifdef DEBUG_3
-  Serial.print(i);
-  Serial.print(" - token: ");
-  Serial.println(token);
-#endif
-
-  while( token != NULL )
-  {
-    if((i == 0) && (strcmp(token, SOF) != 0))
-    {
-      Serial.println(token);
-      Serial.println("SOF bad!");
-      return;
-    }
-
-    switch(i)
-    {
-      case 1:
-      {
-        char buff[strlen(token)];
-        strcpy(buff, token);
-        req->address = atoi(buff);
-      }break;
-      case 2:
-        strcpy(req->cmd, token);
-        break;
-      case 3:
-        strcpy(req->key, token);
-      break;
-      case 4:
-        strcpy(req->value, token);
-        break;
-      case 5:
-        strcpy(req->checksum, token);
-        verifyChecksum(req, token);
-        break;
-      case 6:
-        if(strcmp(token, EOF) == 0)
-          req->fullTransmission = 1;
-      default:
-        break;
-    }
-    i++;
-    token = strtok(NULL, s);
-  }
-    printRequestStruct(req);
-}
-
-uint8_t Mert::verifyChecksum(request *req, char *token)
-{
-  char add[8];
-  itoa(req->address, add, 10);
-  //for the 2 !! and the 4 commas
-  uint8_t l1 = 6;
-  uint8_t l2 = strlen(add);
-  uint8_t l3 = strlen(req->cmd);
-  uint8_t l4 = strlen(req->key);
-  uint8_t l5 = strlen(req->value);
-  uint8_t len = l1 + l2 + l3 + l4 + l5;
-  char reqStr[len+1];
-
-  strcpy(reqStr, "!!,");
-  strcat(reqStr, add);
-  strcat(reqStr, ",");
-  strcat(reqStr, req->cmd);
-  strcat(reqStr, ",");
-  strcat(reqStr, req->key);
-  strcat(reqStr, ",");
-  strcat(reqStr, req->value);
-  Serial.println(reqStr);
-
-  signed char sum = checksum(reqStr);
-  char buff[8];
-  itoa(sum, buff, 10);
-#ifdef DEBUG_2
-  Serial.print("Checksum converted to char[]: ");
-  Serial.println(buff);
-#endif
-  if(strcmp(buff, token) == 0)
-    req->isVerified = 1;
+//   strcpy(reqStr, "!!,");
+//   strcat(reqStr, add);
+//   strcat(reqStr, ",");
+//   strcat(reqStr, req->cmd);
+//   strcat(reqStr, ",");
+//   strcat(reqStr, req->key);
+//   strcat(reqStr, ",");
+//   strcat(reqStr, req->value);
+//   Serial.println(reqStr);
+//
+//   signed char sum = checksum(reqStr);
+//   char buff[8];
+//   itoa(sum, buff, 10);
+// #ifdef DEBUG_2
+//   Serial.print("Checksum converted to char[]: ");
+//   Serial.println(buff);
+// #endif
+//   if(strcmp(buff, token) == 0)
+//     req->isVerified = 1;
 }
 
 
-void Mert::printRequestStruct(request *req)
+void Mert::printRequestStruct(ReqJson *req)
 {
-#ifdef DEBUG_2
-  Serial.print("Stored Request: ");
-  Serial.println(req->message);
+#ifdef DEBUG_2;
   Serial.print("Address: ");
   Serial.println(req->address);
   Serial.print("Cmd: ");
@@ -414,9 +434,9 @@ void Mert::printRequestStruct(request *req)
   Serial.print("Stored checksum: ");
   Serial.println(req->checksum);
   Serial.print("Stored isVerified: ");
-  Serial.println(req->isVerified);
-  Serial.print("Stored fullTransmission: ");
-  Serial.println(req->fullTransmission);
+  // Serial.println(req->isVerified);
+  // Serial.print("Stored fullTransmission: ");
+  // Serial.println(req->fullTransmission);
   Serial.println("\n");
 #endif
 }
