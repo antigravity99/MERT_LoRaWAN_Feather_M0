@@ -40,8 +40,9 @@ bool Mert::managerInit()
   return true;
 }
 
-bool Mert::sendtoWait(ReqJson data)
+bool Mert::sendtoWait(Request data)
 {
+  bool successful = false;
     Serial.println("Sending to rf95_reliable_datagram_server");
     // data = data + "," + MY_TYPE;
     // char buff[data.length()+1];
@@ -56,8 +57,9 @@ bool Mert::sendtoWait(ReqJson data)
     root[CHECKSUM] = data.checksum;
 
     char req[251];
+#ifdef DEBUG_1
     root.printTo((char*)req, root.measureLength()+1);
-
+#endif
     //returnRequest(req, SEND_CMD, TEMP_KEY, buff);
 
   // Send a message to manager_server
@@ -68,59 +70,109 @@ bool Mert::sendtoWait(ReqJson data)
     uint8_t from;
     if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
     {
+#ifdef DEBUG_1
       Serial.print("got reply from : 0x");
       Serial.print(from, HEX);
       Serial.print(": ");
       Serial.println((char*)_rcvBuf);
+#endif
+      if(String((char*)_rcvBuf) == String(ACK))
+        successful = true;
     }
     else
     {
-      Serial.println("No reply, is rf95_reliable_datagram_server running?");
+#ifdef DEBUG_1
+        Serial.println("No reply, is rf95_reliable_datagram_server running?");
+#endif
     }
   }
   else
-    Serial.println("sendtoWait failed");
+  {
+#ifdef DEBUG_1
+      Serial.println("sendtoWait failed");
+#endif
+  }
+  return successful;
+
 }
 
-bool Mert::recvfromAckTimeout()
+bool Mert::recvfromAckTimeout(Request *req)
 {
- // Wait for a message addressed to us from the client
-    uint8_t len = sizeof(_rcvBuf);
-    uint8_t from;
-    if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
-    {
-
-    }
-}
-
-bool Mert::recvfromAck()
-{
-
+  bool successful = false;
   // Wait for a message addressed to us from the client
-      uint8_t len = sizeof(_rcvBuf);
-      uint8_t from;
+  uint8_t len = sizeof(_rcvBuf);
+  uint8_t from;
+
+  if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
+  {
+    #ifdef DEBUG_2
+          Serial.print("Received data from: ");
+          Serial.println(from, DEC);
+          Serial.print("Data: ");
+          Serial.println((char*)_rcvBuf);
+    #endif
+          parseJsonRequest(req, (char*)_rcvBuf);
+          // StaticJsonBuffer<200> jsonBuffer;
+          // JsonObject& root = jsonBuffer.parseObject((char*)_rcvBuf);
+          // req->address = root[ADDRESS];
+          // req->cmd = root[CMD].as<String>();
+          // req->key = root[KEY].as<String>();
+          // req->value = root[VALUE].as<String>();
+          // req->checksum = root[CHECKSUM].as<String>();
+
+
+           //Send a reply back to the originator client
+           // Serial.println(sizeof((char*)_rcvBuf));
+           successful = true;
+           uint8_t ackBuff[] = "ack";
+           if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
+            Serial.println("sendtoWait failed");
+        }
+        return successful;
+}
+
+bool Mert::recvfromAck(Request *req)
+{
+  bool successful = false;
+  // Wait for a message addressed to us from the client
+  uint8_t len = sizeof(_rcvBuf);
+  uint8_t from;
 
   if (_manager.recvfromAck(_rcvBuf, &len, &from))
     {
-      Serial.print(from, DEC);
-      Serial.print(",");
+#ifdef DEBUG_2
+      Serial.print("Received data from: ");
+      Serial.println(from, DEC);
+      Serial.print("Data: ");
       Serial.println((char*)_rcvBuf);
-      Serial.println(sizeof((char*)_rcvBuf));
+#endif
+      parseJsonRequest(req, (char*)_rcvBuf);
+      // StaticJsonBuffer<200> jsonBuffer;
+      // JsonObject& root = jsonBuffer.parseObject((char*)_rcvBuf);
+      // req->address = root[ADDRESS];
+      // req->cmd = root[CMD].as<String>();
+      // req->key = root[KEY].as<String>();
+      // req->value = root[VALUE].as<String>();
+      // req->checksum = root[CHECKSUM].as<String>();
+
 
        //Send a reply back to the originator client
+       // Serial.println(sizeof((char*)_rcvBuf));
+       successful = true;
        uint8_t ackBuff[] = "ack";
-      if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
+       if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
         Serial.println("sendtoWait failed");
     }
-
+    return successful;
 }
 
 void Mert::checkSerial()
 {
   String inputString = "";
-  bool stringComplete = false;
+  // bool stringComplete = false;
 
-  while (Serial.available()) {
+  while (Serial.available())
+  {
 
     // if(stringComplete)
     // {
@@ -175,7 +227,7 @@ void Mert::serialEvent(String serialData)
 
   // request req;
 
-  ReqJson jReq;
+  Request jReq;
 
   int len = serialData.length();
   char buff[len+1];
@@ -203,7 +255,7 @@ void Mert::serialEvent(String serialData)
     // processReq(req);
 }
 
-void Mert::processReq(ReqJson req)
+void Mert::processReq(Request req)
 {
 #ifdef DEBUG_3
   Serial.print("cmd: ");
@@ -233,7 +285,7 @@ void Mert::processReq(ReqJson req)
   }
 }
 
-void Mert::processUpdateCmd(ReqJson req)
+void Mert::processUpdateCmd(Request req)
 {
 #ifdef DEBUG_1
   Serial.println("Got an update Command");
@@ -249,7 +301,7 @@ void Mert::processUpdateCmd(ReqJson req)
 
 }
 
-void Mert::processRequestCmd(ReqJson req)
+void Mert::processRequestCmd(Request req)
 {
 #ifdef DEBUG_1
   Serial.println("Got a request Command");
@@ -305,17 +357,18 @@ void Mert::forwardMessage(uint8_t address, char message[])
   Serial.println("Not yet implemented");
 }
 
-void Mert::parseJsonRequest(ReqJson *req, char *json)
+void Mert::parseJsonRequest(Request *req, char *json)
 {
    StaticJsonBuffer<200> jsonBuffer;
   JsonObject &root = jsonBuffer.parseObject(json);
   if (!root.success())
     Serial.println("Could not parse the json message!");
 
-    req->address = root["Address"];
-    req->cmd = String(root["Cmd"].as<char*>());
-    req->key = String((char *)root["Key"].as<char*>());
-    req->value = String((char *)root["Value"].as<char*>());
+    req->address = root[ADDRESS];
+    req->cmd = root[CMD].as<String>();
+    req->key = root[KEY].as<String>();
+    req->value = root[VALUE].as<String>();
+    req->checksum = root[CHECKSUM].as<String>();
 
 }
 
@@ -384,7 +437,7 @@ void Mert::parseJsonRequest(ReqJson *req, char *json)
 //     printRequestStruct(req);
 // }
 
-void Mert::verifyChecksum(ReqJson *req, char *token)
+void Mert::verifyChecksum(Request *req, char *token)
 {
   // String address = String(req->address);
   // //for the 2 !! and the 4 commas
@@ -418,9 +471,9 @@ void Mert::verifyChecksum(ReqJson *req, char *token)
 }
 
 
-void Mert::printRequestStruct(ReqJson *req)
+void Mert::printRequestStruct(Request *req)
 {
-#ifdef DEBUG_2;
+#ifdef DEBUG_2
   Serial.print("Address: ");
   Serial.println(req->address);
   Serial.print("Cmd: ");

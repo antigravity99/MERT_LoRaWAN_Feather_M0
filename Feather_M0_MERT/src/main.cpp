@@ -48,21 +48,31 @@ void loop()
 
 void server()
 {
-  if (mert.recvfromAck())
+  Request req;
+  if (mert.recvfromAckTimeout(&req))
   {
-    Serial.println("WoooHoo!");
+    Serial.print("Address: ");
+    Serial.println(req.address);
+    Serial.print("CMD: ");
+    Serial.println(req.cmd);
+    Serial.print("Key: ");
+    Serial.println(req.key);
+    Serial.print("Value: ");
+    Serial.println(req.value);
+    Serial.print("Checksum: ");
+    Serial.println(req.checksum);
   }
   mert.checkSerial();
-delay(500);
+  delay(500);
 }
 
 void client()
 {
-  ReqJson req;
+  Request req;
   req.address = mert.getMoteAddress();
   req.cmd = SEND_CMD;
   req.key = TEMP_KEY;
-  req.value = "Some sensor reading value";
+  req.value = String(380);
 
   // Send a message to manager_server
   if (mert.sendtoWait(req))

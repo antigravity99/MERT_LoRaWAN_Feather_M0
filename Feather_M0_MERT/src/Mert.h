@@ -13,9 +13,9 @@
 #define SERVER_TYPE "Server"
 #define AMB_TEMP_TYPE "Ambient_Temp"
 
-
 // #define SOF "!!"
 // #define EOF "**\n"
+#define ACK "ack"
 
 #define REQUEST_CMD "R"
 #define UPDATE_CMD "U"
@@ -41,8 +41,8 @@
 #define FREQ 915.0
 
 #define DEBUG_1
-#define DEBUG_2
-#define DEBUG_3
+// #define DEBUG_2
+// #define DEBUG_3
 
 // typedef struct request
 // {
@@ -56,14 +56,14 @@
 //   uint8_t fullTransmission = 0;
 // } request;
 
-typedef struct ReqJson
+typedef struct Request
 {
   uint8_t address = -1;
   String cmd;
   String key;
   String value;
   String checksum;
-} ReqJson;
+} Request;
 
 class Mert
 {
@@ -90,18 +90,18 @@ class Mert
     void checkSerial();
     char checksum(char* s);
     void serialEvent(String serialData);
-    void processReq(ReqJson req);
-    void verifyChecksum(ReqJson *req, char *token);
-    void processUpdateCmd(ReqJson req);
-    void processRequestCmd(ReqJson req);
+    void processReq(Request req);
+    void verifyChecksum(Request *req, char *token);
+    void processUpdateCmd(Request req);
+    void processRequestCmd(Request req);
     // void returnRequest(char req[], char cmd[], char key[], char value[]);
     void forwardMessage(uint8_t address, char message[]);
     // void parseRequest(request *req, char* str);//maybe able to delete this
-    void parseJsonRequest(ReqJson *req, char* str);
-    void printRequestStruct(ReqJson *req);
-    bool sendtoWait(ReqJson data);
-    bool recvfromAckTimeout();
-    bool recvfromAck();
+    void parseJsonRequest(Request *req, char* str);
+    void printRequestStruct(Request *req);
+    bool sendtoWait(Request req);
+    bool recvfromAckTimeout(Request *req);
+    bool recvfromAck(Request *req);
     bool managerInit();
 
 };
