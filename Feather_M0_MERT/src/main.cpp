@@ -14,6 +14,7 @@ bool isServer = true;
 
 void server();
 void client();
+uint8_t getAddress();
 
 Adafruit_TMP007 tmp007;
 Mert mert;
@@ -48,6 +49,8 @@ void loop()
 
 void server()
 {
+
+  Serial.println(getAddress());
   Request req;
   if (mert.recvfromAckTimeout(&req))
   {
@@ -80,4 +83,20 @@ void client()
 
   }
   delay(500);
+}
+
+uint8_t getAddress()
+{
+  uint8_t val[4] = {1,1,1,1};
+  uint8_t address = -1;
+    if(val[0] == 1)
+      address += 1;
+    if(val[1] == 1)
+      address += 2;
+    if(val[2] == 1)
+      address += 4;
+    if(val[3] == 1)
+      address += 8;
+    address += 1;
+  return address;
 }
