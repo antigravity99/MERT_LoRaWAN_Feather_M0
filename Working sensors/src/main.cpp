@@ -17,6 +17,8 @@ uint8_t getAddress();
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
+Adafruit_TMP007 tmp007;
+
 void displaySensorDetails(void)
 {
   sensor_t sensor;
@@ -121,9 +123,6 @@ void displayRange(void)
 
 void setup()
 {
-//Assigns Adafruit addressing pins
-
-
   // Initialise I2C communication as MASTER
   Wire.begin();
   // Initialise serial communication, set baud rate = 9600
@@ -190,22 +189,11 @@ Serial.println(getAddress());
     data[1] = Wire.read();
   }
 
-  // Convert the data to 14-bits
-  int temp = (((data[0] * 256) + (data[1] & 0xFC)) / 4);
-  if (temp > 8191)
-  {
-    temp -= 16384;
-  }
-  float cTemp = temp * 0.03125;
-  float fTemp = (cTemp * 1.8) + 32;
-
   // Output data to serial monitor
-  Serial.print("Object Temperature in Celsius : ");
-  Serial.print(cTemp);
-  Serial.println(" C");
-  Serial.print("Object Temperature in Fahrenheit : ");
-  Serial.print(fTemp);
-  Serial.println(" F");
+  float objt = tmp007.readObjTempC();
+  Serial.print("Object Temperature: "); Serial.print(objt); Serial.println("*C");
+  float diet = tmp007.readDieTempC();
+   Serial.print("Die Temperature: "); Serial.print(diet); Serial.println("*C");
   delay(500);
 
   /* Get a new sensor event */
