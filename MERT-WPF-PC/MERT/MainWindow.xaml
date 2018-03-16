@@ -1,0 +1,114 @@
+﻿<Window x:Class="MERT.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MERT"
+        mc:Ignorable="d"
+        Title="M.E.R.T." MinHeight="800" MinWidth="600" Icon="mert_icon.ico">
+    <Window.Resources>
+        <local:MoteIsActiveBoolToBackgroundColorConverter x:Key="MoteIsActiveBoolToBackgroundColorConverter" />
+        <local:MoteIsActiveBoolToStringConverter x:Key="MoteIsActiveBoolToStringConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="15*"/>
+            <RowDefinition Height="222*"/>
+            <RowDefinition Height="16*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="17*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="Motes" Grid.Column="0" Grid.Row="0" />
+        <ListView  Grid.Column="0" Grid.Row="1" ItemsSource="{Binding MoteObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{Binding Path=IsActive, Converter={StaticResource MoteIsActiveBoolToBackgroundColorConverter}}" BorderBrush="Black" BorderThickness="2" Margin="2">
+                        <StackPanel Width="215" Orientation="Horizontal">
+                            <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="{Binding MoteAddress}" />
+                                <TextBlock>
+                                    <TextBlock.Inlines>
+                                        <Run>Status:</Run>
+                                        <Run Text="{Binding Path=IsActive, Converter={StaticResource MoteIsActiveBoolToStringConverter}}" />
+                                    </TextBlock.Inlines>
+                                </TextBlock>
+                                <TextBlock>
+                                    <TextBlock.Inlines>
+                                        <Run>Type:</Run>
+                                        <Run Text="{Binding MoteType}" />
+                                    </TextBlock.Inlines>
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <TextBlock Text="Motes" Grid.Column="0" Grid.Row="2" />
+        <StackPanel Grid.Column="1" Grid.Row="1">
+            <Label Content="USB Connected Servers"  HorizontalAlignment="Left" Margin="4" />
+            <ListView HorizontalAlignment="Left" Grid.Column="0" Grid.Row="1" Width="200" Height="150" ItemsSource="{Binding ServerConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="145" BorderBrush="Black" BorderThickness="2" Margin="2">
+                            <StackPanel Width="215" Orientation="Horizontal">
+                                <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock>
+                                        <TextBlock.Inlines>
+                                            <Run>Type:</Run>
+                                            <Run Text="{Binding DeviceType}" />
+                                        </TextBlock.Inlines>
+                                    </TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <Label Content="USB Connected Clients"  HorizontalAlignment="Left" Margin="4" />
+            <ListView HorizontalAlignment="Left"  Grid.Column="0" Grid.Row="1" Width="200" Height="150" ItemsSource="{Binding ClientConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="145" BorderBrush="Black" BorderThickness="2" Margin="2">
+                            <StackPanel Width="215" Orientation="Horizontal">
+                                <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock>
+                                        <TextBlock.Inlines>
+                                            <Run>Type:</Run>
+                                            <Run Text="{Binding DeviceType}" />
+                                        </TextBlock.Inlines>
+                                    </TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <Label Content="Unknown USB Devices"  HorizontalAlignment="Left" Margin="4" />
+            <ListView  HorizontalAlignment="Left" Grid.Column="0" Grid.Row="1" Width="200" Height="150" ItemsSource="{Binding UnknownConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="145" BorderBrush="Black" BorderThickness="2" Margin="2">
+                            <StackPanel Width="215" Orientation="Horizontal">
+                                <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock>
+                                        <TextBlock.Inlines>
+                                            <Run>Type:</Run>
+                                            <Run Text="{Binding DeviceType}" />
+                                        </TextBlock.Inlines>
+                                    </TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+    </Grid>
+</Window>
