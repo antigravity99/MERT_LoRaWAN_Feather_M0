@@ -87,15 +87,15 @@ void client()
 
 uint8_t getAddress()
 {
-  uint8_t val[4] = {1,1,1,1};
+  uint8_t val[4] = {0,1,1,1};
   uint8_t address = -1;
-    if(val[0] == 1)
+    if(val[0])
       address += 1;
-    if(val[1] == 1)
+    if(val[1])
       address += 2;
-    if(val[2] == 1)
+    if(val[2])
       address += 4;
-    if(val[3] == 1)
+    if(val[3])
       address += 8;
     address += 1;
   return address;
