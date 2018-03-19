@@ -3,20 +3,29 @@
 #include <RH_RF95.h>
 #include <ArduinoJson.h>
 
+//Debugging Serial prints
+#define DEBUG_1
+#define DEBUG_2
+#define DEBUG_3
+
+/* for feather m0 */
+#define RFM95_CS 8
+#define RFM95_RST 4
+#define RFM95_INT 3
+
+#define SERVER_ADDRESS 99
+//LoRa Radio frequency
+#define FREQ 915.0
 
 #define HUMIDITY_KEY "HUMIDITY"
 #define TEMP_KEY "TEMP"
 #define TYPE_KEY "TYPE"
 #define VIBRATION_KEY "VIBRATION"
 #define SAMPLE_RATE_KEY "SAMPLE_RATE"
-
-#define SERVER_TYPE "Server"
-#define AMB_TEMP_TYPE "Ambient_Temp"
-
-// #define SOF "!!"
-// #define EOF "**\n"
+//Acknowledgement reply
 #define ACK "ack"
 
+//Command types
 #define REQUEST_CMD "R"
 #define UPDATE_CMD "U"
 #define SEND_CMD "S"
@@ -28,34 +37,7 @@
 #define VALUE "value"
 #define CHECKSUM "checksum"
 
-#define SERVER_ADDRESS 0
-#define MY_ADDRESS 1
-
-#define MY_TYPE AMB_TEMP_TYPE //"SERVER"
-
-/* for feather m0 */
-#define RFM95_CS 8
-#define RFM95_RST 4
-#define RFM95_INT 3
-
-#define FREQ 915.0
-
-#define DEBUG_1
-// #define DEBUG_2
-// #define DEBUG_3
-
-// typedef struct request
-// {
-//   char message[255];
-//   uint8_t address = -1;
-//   char cmd[2];
-//   char key[63];
-//   char value[63];
-//   char checksum[15];
-//   uint8_t isVerified = 0;
-//   uint8_t fullTransmission = 0;
-// } request;
-
+//Request structure - Json will be deserialized to this
 typedef struct Request
 {
   uint8_t address = -1;
@@ -65,10 +47,12 @@ typedef struct Request
   String checksum;
 } Request;
 
+//Mert communication class
 class Mert
 {
 
   private:
+    //Privarte class variables
     String _moteType;
     uint8_t _moteAddress;
     uint8_t _sampleRate = 10;
@@ -82,13 +66,16 @@ class Mert
     uint8_t _rcvBuf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t _sendBuff[256];
 
+    //Private method
+    char checksum(char* s);
+
   public:
+    //public methods
     Mert();
-    void init(String moteType, uint8_t moteAddress);
+    void init(uint8_t moteAddress);
     String getMoteType();
     uint8_t getMoteAddress();
     void checkSerial();
-    char checksum(char* s);
     void serialEvent(String serialData);
     void processReq(Request req);
     void verifyChecksum(Request *req, char *token);
@@ -103,5 +90,4 @@ class Mert
     bool recvfromAckTimeout(Request *req);
     bool recvfromAck(Request *req);
     bool managerInit();
-
 };
