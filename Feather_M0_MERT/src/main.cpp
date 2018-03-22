@@ -1,16 +1,7 @@
-// rf95_reliable_datagram_server.pde
-// -*- mode: C++ -*-
-// Example sketch showing how to create a simple addressed, reliable messaging server
-// with the RHReliableDatagram class, using the RH_RF95 driver to control a RF95 radio.
-// It is designed to work with the other example rf95_reliable_datagram_client
-// Tested with Anarduino MiniWirelessLoRa, Rocket Scream Mini Ultra Pro with the RFM95W
-
-#include <Wire.h>
-#include <Adafruit_TMP007.h>
-#include <SPI.h>
 #include "Mert.h"
 
 bool isServer = false;
+int count = 0;
 
 void server();
 void client();
@@ -22,13 +13,11 @@ Mert mert;
 void setup()
 {
   delay(5000);
-  if (isServer)
-    mert.init(SERVER_ADDRESS);
-  else
-    mert.init(getAddress());
+  mert.init(isServer);
 
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
+
   Serial.begin(9600);
   //while (!Serial) ; // Wait for serial port to be available
   if(!mert.managerInit())
@@ -40,7 +29,8 @@ void setup()
 
 void loop()
 {
-    Serial.println("loop");
+    Serial.print("\rloop ");
+    Serial.print(count++);
     if(isServer)
       server();
     else
@@ -50,54 +40,36 @@ void loop()
 
 void server()
 {
-
-  Serial.println(getAddress());
   Request req;
-  if (mert.recvfromAckTimeout(&req))
+  char *json;
+  if (mert.recvfromAckTimeout(&req, json))
   {
-    Serial.print("Address: ");
-    Serial.println(req.address);
-    Serial.print("CMD: ");
-    Serial.println(req.cmd);
-    Serial.print("Key: ");
-    Serial.println(req.key);
-    Serial.print("Value: ");
-    Serial.println(req.value);
-    Serial.print("Checksum: ");
-    Serial.println(req.checksum);
+    mert.printRequestStruct(&req);
   }
   mert.checkSerial();
-  delay(500);
+  // delay(50);
 }
 
 void client()
 {
+  Temp t = mert.getTemp();
+  // uint16_t m = mert.getAccelMag();
+
   Request req;
   req.address = mert.getMoteAddress();
   req.cmd = SEND_CMD;
   req.key = TEMP_KEY;
-  req.value = String(380);
+  req.value = String(t.irTemp);
+
+
+  // Serial.print("IR temp: "); Serial.println(t.irTemp);
+  // Serial.print("Die temp: "); Serial.println(t.dieTemp);
+  // Serial.print("Accel magnitude: "); Serial.println(m);
 
   // Send a message to manager_server
   if (mert.sendtoWait(req))
   {
 
   }
-  delay(500);
-}
-
-uint8_t getAddress()
-{
-  uint8_t val[4] = {0,1,1,1};
-  uint8_t address = -1;
-    if(val[0])
-      address += 1;
-    if(val[1])
-      address += 2;
-    if(val[2])
-      address += 4;
-    if(val[3])
-      address += 8;
-    address += 1;
-  return address;
+  delay(1000);
 }

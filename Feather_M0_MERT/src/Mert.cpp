@@ -4,10 +4,30 @@ Mert::Mert()
 {
 }
 
-void Mert::init(uint8_t moteAddress)
+void Mert::init(bool isServer)
 {
-  _moteAddress = moteAddress;
+  if(isServer)
+    _moteAddress = SERVER_ADDRESS;
+  else
+    _moteAddress = getAddress();
+
+    /* Assign a unique ID to this sensor at the same time */
+    _accel = Adafruit_ADXL345_Unified(ADXL345_ADDRESS);
+    /* Initialise the sensor */
+    if(!_accel.begin())
+    {
+      /* There was a problem detecting the ADXL345 ... check your connections */
+      Serial.println("Ooops, no ADXL345 detected ... Check your wiring!. The program will not progress!");
+      while(1);
+    }
+
+    /* Set the range to whatever is appropriate for your project */
+    // _accel.setRange(ADXL345_RANGE_16_G);
+    // _accel.setRange(ADXL345_RANGE_8_G);
+    // _accel.setRange(ADXL345_RANGE_4_G);
+    _accel.setRange(ADXL345_RANGE_2_G);
 }
+
 String Mert::getMoteType()
 {
   return _moteType;
@@ -39,26 +59,35 @@ bool Mert::managerInit()
   return true;
 }
 
-bool Mert::sendtoWait(Request data)
+uint8_t Mert::serailizeRequest(Request req, char *buff)
 {
-  bool successful = false;
-
   StaticJsonBuffer<200> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
-  root[ADDRESS] = data.address;
-  root[CMD] = data.cmd;
-  root[KEY] = data.key;
-  root[VALUE] = data.value;
-  root[CHECKSUM] = data.checksum;
+  root[ADDRESS] = req.address;
+  root[CMD] = req.cmd;
+  root[KEY] = req.key;
+  root[VALUE] = req.value;
+  root[CHECKSUM] = req.checksum;
 
-  char req[251];
-#ifdef DEBUG_1
-  root.printTo((char*)req, root.measureLength()+1);
+  root.printTo(buff, root.measureLength()+1);
+
+  return root.measureLength();
+}
+
+bool Mert::sendtoWait(Request req)
+{
+  bool successful = false;
+  char *temp = (char *) malloc(sizeof(char) * 251);
+  int j = serailizeRequest(req, temp);
+  char buff[j];
+  strncpy_PF(buff, temp, j);
+  free(temp);
+#ifdef DEBUG_2
+  Serial.print("sendToWait buff: "); Serial.println(buff);
 #endif
-
   // Send a message to manager_server
-  if (_manager.sendtoWait((uint8_t*)req, sizeof(req), SERVER_ADDRESS))
+  if (_manager.sendtoWait((uint8_t*)buff, sizeof(buff), SERVER_ADDRESS))
   {
     // Now wait for a reply from the server
     uint8_t len = sizeof(_rcvBuf);
@@ -72,12 +101,15 @@ bool Mert::sendtoWait(Request data)
       Serial.println((char*)_rcvBuf);
 #endif
       if(String((char*)_rcvBuf) == String(ACK))
+      {
         successful = true;
+      }
+
     }
     else
     {
 #ifdef DEBUG_1
-        Serial.println("No reply, is rf95_reliable_datagram_server running?");
+      Serial.println("No reply, is rf95_reliable_datagram_server running?");
 #endif
     }
   }
@@ -91,7 +123,7 @@ bool Mert::sendtoWait(Request data)
 
 }
 
-bool Mert::recvfromAckTimeout(Request *req)
+bool Mert::recvfromAckTimeout(Request *req, char* json)
 {
   bool successful = false;
   // Wait for a message addressed to us from the client
@@ -106,12 +138,18 @@ bool Mert::recvfromAckTimeout(Request *req)
       Serial.print("Data: ");
       Serial.println((char*)_rcvBuf);
     #endif
+
     parseJsonRequest(req, (char*)_rcvBuf);
      //Send a reply back to the originator client
      successful = true;
      uint8_t ackBuff[] = "ack";
      if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
-    Serial.println("sendtoWait failed");
+      Serial.println("sendtoWait failed");
+  }
+  else
+  {
+    Serial.println("recvfromAckTimeout faild");
+    return successful;
   }
   return successful;
 }
@@ -285,7 +323,10 @@ void Mert::forwardMessage(uint8_t address, char message[])
 
 void Mert::parseJsonRequest(Request *req, char *json)
 {
-   StaticJsonBuffer<200> jsonBuffer;
+  StaticJsonBuffer<200> jsonBuffer;
+#ifdef DEBUG_1
+  Serial.print("ParseJsonRequest json: "); Serial.println(json);
+#endif
   JsonObject &root = jsonBuffer.parseObject(json);
   if (!root.success())
     Serial.println("Could not parse the json message!");
@@ -297,6 +338,95 @@ void Mert::parseJsonRequest(Request *req, char *json)
     req->checksum = root[CHECKSUM].as<String>();
 
 }
+
+Temp Mert::getTemp()
+{
+  Temp temp;
+
+  // Output data to serial monitor
+  temp.irTemp = _tmp007.readObjTempC();
+  Serial.print("Object Temperature: "); Serial.print(temp.irTemp); Serial.println("*C");
+  temp.dieTemp = _tmp007.readDieTempC();
+  Serial.print("Die Temperature: "); Serial.print(temp.dieTemp); Serial.println("*C");
+
+  return temp;
+}
+
+uint16_t Mert::getAccelMag()
+{
+  // /* Get a new sensor event */
+    sensors_event_t event;
+    _accel.getEvent(&event);
+
+    /* Display the results (acceleration is measured in m/s^2) */
+    //changed to be int instead of m/s^
+    Serial.println("Accelerometer readings are:");
+    Serial.print("X: "); Serial.print(event.acceleration.x); Serial.print("  ");
+    Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print("  ");
+    Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print("  ");Serial.println("m/s^2 ");
+
+    uint16_t magnitude = sqrt((event.acceleration.x * event.acceleration.x) + (event.acceleration.y * event.acceleration.y) + (event.acceleration.z * event.acceleration.z));
+    return magnitude;
+}
+
+
+
+uint8_t Mert::getAddress()
+{
+  uint8_t val[4] = {0,1,1,1};
+  uint8_t address = -1;
+    if(val[0])
+      address += 1;
+    if(val[1])
+      address += 2;
+    if(val[2])
+      address += 4;
+    if(val[3])
+      address += 8;
+    address += 1;
+  return address;
+}
+
+
+// uint8_t getAddress()
+// {
+//   uint8_t address = -1;
+//   if(digitalRead(PIN_1))
+//       address += 1;
+//   if(digitalRead(PIN_2))
+//       address += 2;
+//   if(digitalRead(PIN_3))
+//       address += 4;
+//   if(digitalRead(PIN_4))
+//       address += 8;
+//     address += 1;
+//   return address;
+// }
+
+
+void Mert::printRequestStruct(Request *req)
+{
+// #ifdef DEBUG_2
+  Serial.print("Address: ");
+  Serial.println(req->address);
+  Serial.print("Cmd: ");
+  Serial.println(req->cmd);
+  Serial.print("Stored key: ");
+  Serial.println(req->key);
+  Serial.print("Stored value: ");
+  Serial.println(req->value);
+  Serial.print("Stored key: ");
+  Serial.println(req->key);
+  Serial.print("Stored checksum: ");
+  Serial.println(req->checksum);
+  // Serial.print("Stored isVerified: ");
+  // Serial.println(req->isVerified);
+  // Serial.print("Stored fullTransmission: ");
+  // Serial.println(req->fullTransmission);
+  Serial.println("\n");
+// #endif
+}
+
 
 // void Mert::parseRequest(request *req, char* str)
 // {
@@ -363,8 +493,8 @@ void Mert::parseJsonRequest(Request *req, char *json)
 //     printRequestStruct(req);
 // }
 
-void Mert::verifyChecksum(Request *req, char *token)
-{
+// void Mert::verifyChecksum(Request *req, char *token)
+// {
   // String address = String(req->address);
   // //for the 2 !! and the 4 commas
   // uint8_t l1 = 6;
@@ -394,28 +524,4 @@ void Mert::verifyChecksum(Request *req, char *token)
 // #endif
 //   if(strcmp(buff, token) == 0)
 //     req->isVerified = 1;
-}
-
-
-void Mert::printRequestStruct(Request *req)
-{
-#ifdef DEBUG_2
-  Serial.print("Address: ");
-  Serial.println(req->address);
-  Serial.print("Cmd: ");
-  Serial.println(req->cmd);
-  Serial.print("Stored key: ");
-  Serial.println(req->key);
-  Serial.print("Stored value: ");
-  Serial.println(req->value);
-  Serial.print("Stored key: ");
-  Serial.println(req->key);
-  Serial.print("Stored checksum: ");
-  Serial.println(req->checksum);
-  Serial.print("Stored isVerified: ");
-  // Serial.println(req->isVerified);
-  // Serial.print("Stored fullTransmission: ");
-  // Serial.println(req->fullTransmission);
-  Serial.println("\n");
-#endif
-}
+// }
