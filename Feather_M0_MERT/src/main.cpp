@@ -10,7 +10,7 @@
 #include <SPI.h>
 #include "Mert.h"
 
-bool isServer = true;
+bool isServer = false;
 
 void server();
 void client();
@@ -21,11 +21,11 @@ Mert mert;
 
 void setup()
 {
-
+  delay(5000);
   if (isServer)
-    mert.init(String(SERVER_TYPE), SERVER_ADDRESS);
+    mert.init(SERVER_ADDRESS);
   else
-    mert.init(String(AMB_TEMP_TYPE), 1);
+    mert.init(getAddress());
 
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -40,6 +40,7 @@ void setup()
 
 void loop()
 {
+    Serial.println("loop");
     if(isServer)
       server();
     else
