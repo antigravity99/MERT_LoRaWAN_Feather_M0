@@ -1,6 +1,6 @@
 #include "Mert.h"
 
-bool isServer = false;
+bool isServer = true;
 int count = 0;
 
 void server();
@@ -29,8 +29,8 @@ void setup()
 
 void loop()
 {
-    Serial.print("\rloop ");
-    Serial.print(count++);
+    // Serial.print("\rloop ");
+    // Serial.print(count++);
     if(isServer)
       server();
     else
@@ -58,7 +58,7 @@ void client()
   Request req;
   req.address = mert.getMoteAddress();
   req.cmd = SEND_CMD;
-  req.key = TEMP_KEY;
+  req.key = TEMP_IR_KEY;
   req.value = String(t.irTemp);
 
 

@@ -37,7 +37,8 @@
 #define PIN_4 13
 
 #define HUMIDITY_KEY "HUMIDITY"
-#define TEMP_KEY "TEMP"
+#define TEMP_IR_KEY "TEMP_IR"
+#define TEMP_DIE_KEY "TEMP_DIE"
 #define TYPE_KEY "TYPE"
 #define VIBRATION_KEY "VIBRATION"
 #define SAMPLE_RATE_KEY "SAMPLE_RATE"

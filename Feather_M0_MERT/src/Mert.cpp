@@ -9,8 +9,8 @@ void Mert::init(bool isServer)
   if(isServer)
     _moteAddress = SERVER_ADDRESS;
   else
+  {
     _moteAddress = getAddress();
-
     /* Assign a unique ID to this sensor at the same time */
     _accel = Adafruit_ADXL345_Unified(ADXL345_ADDRESS);
     /* Initialise the sensor */
@@ -26,6 +26,7 @@ void Mert::init(bool isServer)
     // _accel.setRange(ADXL345_RANGE_8_G);
     // _accel.setRange(ADXL345_RANGE_4_G);
     _accel.setRange(ADXL345_RANGE_2_G);
+  }
 }
 
 String Mert::getMoteType()
@@ -342,7 +343,6 @@ void Mert::parseJsonRequest(Request *req, char *json)
 Temp Mert::getTemp()
 {
   Temp temp;
-
   // Output data to serial monitor
   temp.irTemp = _tmp007.readObjTempC();
   Serial.print("Object Temperature: "); Serial.print(temp.irTemp); Serial.println("*C");
@@ -415,8 +415,6 @@ void Mert::printRequestStruct(Request *req)
   Serial.println(req->key);
   Serial.print("Stored value: ");
   Serial.println(req->value);
-  Serial.print("Stored key: ");
-  Serial.println(req->key);
   Serial.print("Stored checksum: ");
   Serial.println(req->checksum);
   // Serial.print("Stored isVerified: ");
