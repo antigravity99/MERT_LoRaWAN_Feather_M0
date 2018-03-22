@@ -21,6 +21,7 @@ Adafruit_TMP007 tmp007;
 
 void displaySensorDetails(void)
 {
+
   sensor_t sensor;
   accel.getSensor(&sensor);
   Serial.println("------------------------------------");
@@ -33,6 +34,7 @@ void displaySensorDetails(void)
   Serial.println("------------------------------------");
   Serial.println("");
   delay(500);
+
 }
 
 void displayDataRate(void)
@@ -171,15 +173,15 @@ Serial.println(getAddress());
   unsigned data[2];
 
   // Start I2C Transmission
-  Wire.beginTransmission(Addr);
+//  Wire.beginTransmission(Addr);
   // Select object temp data register
-  Wire.write(0x03);
+//  Wire.write(0x03);
   // Stop I2C Transmission
-  Wire.endTransmission();
-  delay(300);
+//  Wire.endTransmission();
+//  delay(300);
 
   // Request 2 bytes of data
-  Wire.requestFrom(Addr, 2);
+//  Wire.requestFrom(Addr, 2);
 
   // Read 2 bytes of data
   // temp msb, temp lsb
@@ -190,22 +192,25 @@ Serial.println(getAddress());
   }
 
   // Output data to serial monitor
-  float objt = tmp007.readObjTempC();
-  Serial.print("Object Temperature: "); Serial.print(objt); Serial.println("*C");
-  float diet = tmp007.readDieTempC();
-   Serial.print("Die Temperature: "); Serial.print(diet); Serial.println("*C");
-  delay(500);
-
-  /* Get a new sensor event */
+  //float objt = tmp007.readObjTempC();
+  //Serial.print("Object Temperature: "); Serial.print(objt); Serial.println("*C");
+  //float diet = tmp007.readDieTempC();
+   //Serial.print("Die Temperature: "); Serial.print(diet); Serial.println("*C");
+  //delay(500);
+for(int i = 0; i<50; i++)
+{/* Get a new sensor event */
   sensors_event_t event;
   accel.getEvent(&event);
 
   /* Display the results (acceleration is measured in m/s^2) */
+
   Serial.println("Accelerometer readings are:");
   Serial.print("X: "); Serial.print(event.acceleration.x); Serial.print("  ");
   Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print("  ");
   Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print("  ");Serial.println("m/s^2 ");
-  delay(500);
+
+}
+delay(5000);
 }
 
 

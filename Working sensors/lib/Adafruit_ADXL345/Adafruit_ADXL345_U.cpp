@@ -15,7 +15,7 @@
     products from Adafruit!
 
     @section  HISTORY
-    
+
     v1.1 - Added Adafruit_Sensor library support
     v1.0 - First release
 */
@@ -69,7 +69,7 @@ static uint8_t spixfer(uint8_t clock, uint8_t miso, uint8_t mosi, uint8_t data) 
     digitalWrite(clock, LOW);
     digitalWrite(mosi, data & (1<<i));
     digitalWrite(clock, HIGH);
-    if (digitalRead(miso)) 
+    if (digitalRead(miso))
       reply |= 1;
   }
   return reply;
@@ -113,7 +113,7 @@ uint8_t Adafruit_ADXL345_Unified::readRegister(uint8_t reg) {
     uint8_t reply = spixfer(_clk, _di, _do, 0xFF);
     digitalWrite(_cs, HIGH);
     return reply;
-  }  
+  }
 }
 
 /**************************************************************************/
@@ -127,7 +127,7 @@ int16_t Adafruit_ADXL345_Unified::read16(uint8_t reg) {
     i2cwrite(reg);
     Wire.endTransmission();
     Wire.requestFrom(ADXL345_ADDRESS, 2);
-    return (uint16_t)(i2cread() | (i2cread() << 8));  
+    return (uint16_t)(i2cread() | (i2cread() << 8));
   } else {
     reg |= 0x80 | 0x40; // read byte | multibyte
     digitalWrite(_cs, LOW);
@@ -135,11 +135,11 @@ int16_t Adafruit_ADXL345_Unified::read16(uint8_t reg) {
     uint16_t reply = spixfer(_clk, _di, _do, 0xFF)  | (spixfer(_clk, _di, _do, 0xFF) << 8);
     digitalWrite(_cs, HIGH);
     return reply;
-  }    
+  }
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Read the device ID (can be used to check connection)
 */
 /**************************************************************************/
@@ -149,7 +149,7 @@ uint8_t Adafruit_ADXL345_Unified::getDeviceID(void) {
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Gets the most recent X axis value
 */
 /**************************************************************************/
@@ -158,7 +158,7 @@ int16_t Adafruit_ADXL345_Unified::getX(void) {
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Gets the most recent Y axis value
 */
 /**************************************************************************/
@@ -167,7 +167,7 @@ int16_t Adafruit_ADXL345_Unified::getY(void) {
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Gets the most recent Z axis value
 */
 /**************************************************************************/
@@ -207,7 +207,7 @@ Adafruit_ADXL345_Unified::Adafruit_ADXL345_Unified(uint8_t clock, uint8_t miso, 
 */
 /**************************************************************************/
 bool Adafruit_ADXL345_Unified::begin() {
-  
+
   if (_i2c)
     Wire.begin();
   else {
@@ -226,10 +226,10 @@ bool Adafruit_ADXL345_Unified::begin() {
     Serial.println(deviceid, HEX);
     return false;
   }
-  
+
   // Enable measurements
-  writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
-    
+  writeRegister(ADXL345_REG_POWER_CTL, 0x08);
+
   return true;
 }
 
@@ -246,13 +246,13 @@ void Adafruit_ADXL345_Unified::setRange(range_t range)
   /* Update the data rate */
   format &= ~0x0F;
   format |= range;
-  
+
   /* Make sure that the FULL-RES bit is enabled for range scaling */
   format |= 0x08;
-  
+
   /* Write the register back to the IC */
   writeRegister(ADXL345_REG_DATA_FORMAT, format);
-  
+
   /* Keep track of the current range (to avoid readbacks) */
   _range = range;
 }
@@ -291,27 +291,27 @@ dataRate_t Adafruit_ADXL345_Unified::getDataRate(void)
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Gets the most recent sensor event
 */
 /**************************************************************************/
 bool Adafruit_ADXL345_Unified::getEvent(sensors_event_t *event) {
   /* Clear the event */
   memset(event, 0, sizeof(sensors_event_t));
-  
+
   event->version   = sizeof(sensors_event_t);
   event->sensor_id = _sensorID;
   event->type      = SENSOR_TYPE_ACCELEROMETER;
   event->timestamp = 0;
-  event->acceleration.x = getX() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-  event->acceleration.y = getY() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-  event->acceleration.z = getZ() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-  
+  event->acceleration.x = getX();// * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
+  event->acceleration.y = getY();// * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
+  event->acceleration.z = getZ(); //* ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
+
   return true;
 }
 
 /**************************************************************************/
-/*! 
+/*!
     @brief  Gets the sensor_t data
 */
 /**************************************************************************/
@@ -328,5 +328,5 @@ void Adafruit_ADXL345_Unified::getSensor(sensor_t *sensor) {
   sensor->min_delay   = 0;
   sensor->max_value   = -156.9064F; /* -16g = 156.9064 m/s^2  */
   sensor->min_value   = 156.9064F;  /*  16g = 156.9064 m/s^2  */
-  sensor->resolution  = 0.03923F;   /*  4mg = 0.0392266 m/s^2 */ 
+  sensor->resolution  = 0.03923F;   /*  4mg = 0.0392266 m/s^2 */
 }
