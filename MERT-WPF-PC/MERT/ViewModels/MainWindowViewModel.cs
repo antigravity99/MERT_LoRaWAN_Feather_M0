@@ -27,15 +27,15 @@ namespace MERT
 
             Random rand = new Random();
 
-            for(int i = 0; i < 16; i++)
-            {
-                MoteObservableCollection.Add(new ListViewModel()
-                {
-                    MoteAddress = $"Mote ID#{i}",
-                    MoteType = (rand.Next(2) == 0 ) ? DeviceTypes.AmbientTemp.ToString() : (rand.Next(2) == 0 ) ? "Vibration Mote" : "Infrared Temp Mote",
-                    IsActive = (rand.Next(2) == 0) ? true : false
-                });
-            }
+            //for(int i = 0; i < 16; i++)
+            //{
+            //    MoteObservableCollection.Add(new ListViewModel()
+            //    {
+            //        MoteAddress = $"Mote ID#{i}",
+            //        MoteType = (rand.Next(2) == 0 ) ? Values.DeviceTypes.AmbientTemp.ToString() : (rand.Next(2) == 0 ) ? "Vibration Mote" : "Infrared Temp Mote",
+            //        IsActive = (rand.Next(2) == 0) ? true : false
+            //    });
+            //}
 
             ArduinoManager am = new ArduinoManager();
 
@@ -65,9 +65,9 @@ namespace MERT
         private void AddArduino(Arduino a)
         { 
             a.TypeChanged += ArduinoTypeChanged;
-            if (a.DeviceType == DeviceTypes.Unknown)
+            if (a.DeviceType == Values.DeviceTypes.Unknown)
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Add(a)));
-            else if (a.DeviceType == DeviceTypes.Server)
+            else if (a.DeviceType == Values.DeviceTypes.Server)
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Add(a)));
             else
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Add(a)));
@@ -76,9 +76,9 @@ namespace MERT
         private void DeviceRemoved(object o, EventArgs e)
         {
             Arduino a = (Arduino)o;
-            if (a.DeviceType == DeviceTypes.Unknown)
+            if (a.DeviceType == Values.DeviceTypes.Unknown)
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Remove(a)));
-            else if (a.DeviceType == DeviceTypes.Server)
+            else if (a.DeviceType == Values.DeviceTypes.Server)
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Remove(a)));
             else
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Remove(a)));

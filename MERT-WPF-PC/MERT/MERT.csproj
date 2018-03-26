@@ -39,8 +39,11 @@
     <ApplicationIcon>mert_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="PropertyChanged, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ee3ee20bcf148ddd, processorArchitecture=MSIL">
-      <HintPath>..\packages\PropertyChanged.Fody.2.2.5\lib\net452\PropertyChanged.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PropertyChanged, Version=2.2.9.0, Culture=neutral, PublicKeyToken=ee3ee20bcf148ddd, processorArchitecture=MSIL">
+      <HintPath>..\packages\PropertyChanged.Fody.2.2.9\lib\net452\PropertyChanged.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -63,12 +66,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\Cmds.cs" />
+    <Compile Include="Models\Keys.cs" />
     <Compile Include="Models\LENTZ\Arduino.cs" />
     <Compile Include="Models\LENTZ\ArduinoObservableCollection.cs" />
     <Compile Include="Models\LENTZ\ArduinoManager.cs" />
     <Compile Include="Models\LENTZ\ArduinoPropKeys.cs" />
     <Compile Include="Models\ListViewModel.cs" />
-    <Compile Include="Models\LENTZ\EnumTypesAndStatuses.cs" />
+    <Compile Include="Models\LENTZ\StatesAndStatues.cs" />
+    <Compile Include="Models\Request.cs" />
+    <Compile Include="Models\Values.cs" />
     <Compile Include="ValueConverters\MoteIsActiveBoolToStringConverter.cs" />
     <Compile Include="ValueConverters\MoteIsActiveBoolToBackgroundColorConverter.cs" />
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
@@ -127,11 +134,11 @@
     <Resource Include="mert_icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\Fody.2.3.23\build\Fody.targets" Condition="Exists('..\packages\Fody.2.3.23\build\Fody.targets')" />
+  <Import Project="..\packages\Fody.2.4.6\build\Fody.targets" Condition="Exists('..\packages\Fody.2.4.6\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Fody.2.3.23\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.3.23\build\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Fody.2.4.6\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.4.6\build\Fody.targets'))" />
   </Target>
 </Project>

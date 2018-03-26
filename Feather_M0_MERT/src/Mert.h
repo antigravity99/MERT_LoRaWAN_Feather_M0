@@ -9,9 +9,9 @@
 // #include <SPI.h>
 
 //Debugging Serial prints
-// #define DEBUG_1
-// #define DEBUG_2
-// #define DEBUG_3
+#define DEBUG_1
+#define DEBUG_2
+#define DEBUG_3
 
 /* for feather m0 */
 #define RFM95_CS 8
@@ -42,6 +42,10 @@
 #define TYPE_KEY "TYPE"
 #define VIBRATION_KEY "VIBRATION"
 #define SAMPLE_RATE_KEY "SAMPLE_RATE"
+
+#define SERVER_VALUE "Server"
+#define MOTE_VALUE "Mote"
+
 //Acknowledgement reply
 #define ACK "ack"
 
@@ -51,11 +55,11 @@
 #define SEND_CMD "S"
 #define REQUEST_RESPONSE_CMD "Q"
 //Json keys
-#define ADDRESS "address"
-#define CMD "cmd"
-#define KEY "key"
-#define VALUE "value"
-#define CHECKSUM "checksum"
+#define ADDRESS "Address"
+#define CMD "Cmd"
+#define KEY "Key"
+#define VALUE "Value"
+#define CHECKSUM "Checksum"
 
 //Request structure - Json will be deserialized to this
 typedef struct Request

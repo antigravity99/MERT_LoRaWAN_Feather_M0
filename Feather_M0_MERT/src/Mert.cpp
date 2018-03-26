@@ -7,10 +7,14 @@ Mert::Mert()
 void Mert::init(bool isServer)
 {
   if(isServer)
+  {
     _moteAddress = SERVER_ADDRESS;
+    _moteType = SERVER_VALUE;
+  }
   else
   {
     _moteAddress = getAddress();
+    _moteType = MOTE_VALUE;
     /* Assign a unique ID to this sensor at the same time */
     _accel = Adafruit_ADXL345_Unified(ADXL345_ADDRESS);
     /* Initialise the sensor */
@@ -221,15 +225,15 @@ void Mert::serialEvent(String serialData)
   Serial.println(serialData);
 #endif
 
-  Request jReq;
+  Request req;
   int len = serialData.length();
   char buff[len+1];
   serialData.toCharArray(buff, len+1);
+  parseJsonRequest(&req, buff);
+  processReq(req);
 
-  parseJsonRequest(&jReq, buff);
-
-  Serial.print("JSON to struct key: ");
-  Serial.println(jReq.key);
+  // Serial.print("JSON to struct key: ");
+  // Serial.println(jReq.key);
 
   // parseRequest(&req, buff);
 
@@ -260,21 +264,26 @@ void Mert::processReq(Request req)
   Serial.println((int)UPDATE_CMD);
 #endif
 
-  switch((int)req.cmd.charAt(0))
-  {
-    case (int)UPDATE_CMD[0]:
-      processUpdateCmd(req);
-      break;
-    case (int)REQUEST_CMD[0]:
-#ifdef DEBUG_2
-      Serial.println("Got a request Command");
-#endif
-      processRequestCmd(req);
-      break;
-    default:
-      Serial.println("Not a valid command");
-      break;
-  }
+if(req.cmd == REQUEST_CMD)
+  processRequestCmd(req);
+else if(req.cmd == UPDATE_CMD)
+  processUpdateCmd(req);
+
+//   switch((int)req.cmd.charAt(0))
+//   {
+//     case (int)UPDATE_CMD[0]:
+//       processUpdateCmd(req);
+//       break;
+//     case (int)REQUEST_CMD[0]:
+// #ifdef DEBUG_2
+//       Serial.println("Got a request Command");
+// #endif
+//       processRequestCmd(req);
+//       break;
+//     default:
+//       Serial.println("Not a valid command");
+//       break;
+//   }
 }
 
 void Mert::processUpdateCmd(Request req)
@@ -307,6 +316,18 @@ void Mert::processRequestCmd(Request req)
     Serial.print("Process CMD type: ");
     Serial.println(TYPE_KEY);
 #endif
+    Request returnReq;
+    returnReq.address = _moteAddress;
+    returnReq.cmd = REQUEST_RESPONSE_CMD;
+    returnReq.key = TYPE_KEY;
+    returnReq.value = _moteType;
+    returnReq.checksum = "";
+
+    char *buff = (char *) malloc(sizeof(char) * 251);
+    serailizeRequest(returnReq, buff);
+    Serial.println(String(buff));
+    free(buff);
+
     // char req[251];
     // returnRequest(req, REQUEST_RESPONSE_CMD, TYPE_KEY, MY_TYPE);
   }
@@ -326,11 +347,14 @@ void Mert::parseJsonRequest(Request *req, char *json)
 {
   StaticJsonBuffer<200> jsonBuffer;
 #ifdef DEBUG_1
-  Serial.print("ParseJsonRequest json: "); Serial.println(json);
+  Serial.print("ParseJsonRequest json: ");
+   Serial.println(json);
 #endif
   JsonObject &root = jsonBuffer.parseObject(json);
   if (!root.success())
     Serial.println("Could not parse the json message!");
+
+    // root.prettyPrintTo(Serial);
 
     req->address = root[ADDRESS];
     req->cmd = root[CMD].as<String>();
@@ -338,6 +362,7 @@ void Mert::parseJsonRequest(Request *req, char *json)
     req->value = root[VALUE].as<String>();
     req->checksum = root[CHECKSUM].as<String>();
 
+    printRequestStruct(req);
 }
 
 Temp Mert::getTemp()

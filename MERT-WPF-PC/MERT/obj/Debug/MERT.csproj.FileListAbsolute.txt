@@ -16,3 +16,23 @@ C:\Users\Josh Lentz\source\repos\MERT\MERT\obj\Debug\MERT.csproj.CoreCompileInpu
 C:\Users\Josh Lentz\source\repos\MERT\MERT\obj\Debug\MERT.exe
 C:\Users\Josh Lentz\source\repos\MERT\MERT\obj\Debug\MERT.pdb
 C:\Users\Josh Lentz\source\repos\MERT\MERT\obj\Debug\MERT.csprojResolveAssemblyReference.cache
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT.csprojResolveAssemblyReference.cache
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MainWindow.g.cs
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\App.g.cs
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\GeneratedInternalTypeHelper.g.cs
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT_MarkupCompile.cache
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT_MarkupCompile.lref
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT.exe
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT.pdb
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\MERT.exe.config
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\MERT.exe
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\MERT.pdb
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\Newtonsoft.Json.dll
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\PropertyChanged.dll
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\Newtonsoft.Json.xml
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\PropertyChanged.xml
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MainWindow.baml
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT.g.resources
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT.Properties.Resources.resources
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT.csproj.GenerateResource.Cache
+C:\Users\s153720\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\MERT.csproj.CoreCompileInputs.cache

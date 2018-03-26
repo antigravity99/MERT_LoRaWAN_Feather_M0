@@ -61,6 +61,9 @@
                                         <TextBlock.Inlines>
                                             <Run>Type:</Run>
                                             <Run Text="{Binding DeviceType}" />
+                                            <LineBreak />
+                                            <Run>Address:</Run>
+                                            <Run Text="{Binding Address}" />
                                         </TextBlock.Inlines>
                                     </TextBlock>
                                 </StackPanel>
@@ -81,6 +84,9 @@
                                         <TextBlock.Inlines>
                                             <Run>Type:</Run>
                                             <Run Text="{Binding DeviceType}" />
+                                            <LineBreak />
+                                            <Run>Address:</Run>
+                                            <Run Text="{Binding Address}" />
                                         </TextBlock.Inlines>
                                     </TextBlock>
                                 </StackPanel>
@@ -101,6 +107,9 @@
                                         <TextBlock.Inlines>
                                             <Run>Type:</Run>
                                             <Run Text="{Binding DeviceType}" />
+                                            <LineBreak />
+                                            <Run>Address:</Run>
+                                            <Run Text="{Binding Address}" />
                                         </TextBlock.Inlines>
                                     </TextBlock>
                                 </StackPanel>

@@ -1,6 +1,6 @@
 #include "Mert.h"
 
-bool isServer = true;
+bool isServer = false;
 int count = 0;
 
 void server();
@@ -72,4 +72,5 @@ void client()
 
   }
   delay(1000);
+  mert.checkSerial();
 }
