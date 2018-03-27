@@ -95,7 +95,7 @@ namespace MERT
                 if (!indata.StartsWith("{\"Address"))
                     return;
                 Request req = JsonConvert.DeserializeObject<Request>(indata);
-
+                
                 Address = req.Address;
 
                 if (req.Cmd.Equals(Cmds.REQUEST_RESPONSE_CMD))
@@ -105,7 +105,7 @@ namespace MERT
                         DeviceType = (Values.DeviceTypes)Enum.Parse(typeof(Values.DeviceTypes), req.Value);
                     }
                 }
-                else if (req.Cmd.Equals(Cmds.UPDATE_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
+                else if (req.Cmd.Equals(Cmds.SEND_CMD) && _deviceType.Equals(Values.DeviceTypes.Server))
                 {
                     var items = (from i in _clientsCollection
                                  where i.MoteAddress == req.Address
