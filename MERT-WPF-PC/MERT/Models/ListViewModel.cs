@@ -8,7 +8,7 @@ namespace MERT
 {
     public class ListViewModel
     {
-        public string MoteAddress { get; set; }
+        public int MoteAddress { get; set; }
         public string MoteType { get; set; }
         public bool IsActive { get; set; }
 

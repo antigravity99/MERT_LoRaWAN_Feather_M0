@@ -42,9 +42,11 @@
 #define TYPE_KEY "TYPE"
 #define VIBRATION_KEY "VIBRATION"
 #define SAMPLE_RATE_KEY "SAMPLE_RATE"
+#define INIT_KEY "INIT"
 
 #define SERVER_VALUE "Server"
 #define MOTE_VALUE "Mote"
+#define INIT_VALUE "INIT";
 
 //Acknowledgement reply
 #define ACK "ack"

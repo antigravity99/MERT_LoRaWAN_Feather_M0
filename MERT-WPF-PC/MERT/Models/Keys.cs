@@ -14,5 +14,6 @@ namespace MERT
         public const string TYPE_KEY = "TYPE";
         public const string VIBRATION_KEY = "VIBRATION";
         public const string SAMPLE_RATE_KEY = "SAMPLE_RATE";
+        public const string INIT_KEY = "INIT";
     }
 }

@@ -5,12 +5,26 @@ using System.Diagnostics;
 using System.Text;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace MERT
 {
     public class Arduino
     {
         public static readonly int MAX_ADDRESS = 99;
+
+        //private ObservableCollection<ListViewModel> _clientsCollection;
+
+
+        private ObservableCollection<ListViewModel> _clientsCollection;
+
+        public ObservableCollection<ListViewModel> ClientsCollection
+        {
+            get { return _clientsCollection; }
+            set { _clientsCollection = value; }
+        }
+
 
         public event EventHandler TypeChanged;
 
@@ -20,14 +34,14 @@ namespace MERT
 
         public DeviceUSBStatus USBStatus { get; set; }
 
-        private Values.DeviceTypes _deviceTypes;
+        private Values.DeviceTypes _deviceType;
 
         public Values.DeviceTypes DeviceType
         {
-            get { return _deviceTypes; }
+            get { return _deviceType; }
             set
             {
-                _deviceTypes = value;
+                _deviceType = value;
                 if(this.TypeChanged != null)
                     TypeChanged(this, null);
 
@@ -63,14 +77,21 @@ namespace MERT
             if (!ConnectToArduino())
                 return;
             //DeviceTypeRequest();
-            WaitToGetDeviceInfo();
+            /*WaitToGetDeviceInfo*/();
         }
 
-        private async Task WaitToGetDeviceInfo()
-        {
-            await Task.Delay(3000);
-            DeviceTypeRequest();
-        }
+        //private async Task WaitToGetDeviceInfo()
+        //{
+        //    await Task.Delay(3000);
+        //    Request reqResponse = new Request()
+        //    {
+        //        Address = 98,
+        //        Cmd = Cmds.REQUEST_CMD,
+        //        Key = Keys.INIT_KEY,
+        //        Value = Values.INIT_VALUE
+        //    };
+        //    DeviceTypeRequest();
+        //}
 
         private void SerialDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
@@ -83,6 +104,7 @@ namespace MERT
             {
                 string indata = sp.ReadLine();
                 Debug.WriteLine(indata);
+
                 Request req = JsonConvert.DeserializeObject<Request>(indata);
 
                 Address = req.Address;
@@ -92,6 +114,31 @@ namespace MERT
                     if (req.Key.Equals(Keys.TYPE_KEY))
                     {
                         DeviceType = (Values.DeviceTypes)Enum.Parse(typeof(Values.DeviceTypes), req.Value);
+                    }
+                }
+                else if(req.Cmd.Equals(Cmds.UPDATE_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
+                {
+                    //if(req.Key.Equals(Keys.))
+                }
+                else if (req.Cmd.Equals(Cmds.REQUEST_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
+                {
+                    if (req.Key.Equals(Keys.INIT_KEY))
+                    {
+                        var items = (from i in _clientsCollection
+                                     where i.MoteAddress == req.Address
+                                     select i).ToList();
+                        if (items.Count > 0)
+                        {
+                            items[0].IsActive = true;
+                            Request reqResponse = new Request()
+                            {
+                                Address = req.Address,
+                                Cmd = Cmds.REQUEST_RESPONSE_CMD,
+                                Key = Keys.INIT_KEY,
+                                Value = Values.INIT_VALUE
+                            };
+
+                        }
                     }
                 }
             }
@@ -123,16 +170,8 @@ namespace MERT
             }
         }
 
-        private void DeviceTypeRequest()
+        private void DeviceTypeRequest(Request req)
         {
-            Request req = new Request()
-            {
-                Address = 98,
-                Cmd = Cmds.REQUEST_CMD,
-                Key = Keys.TYPE_KEY,
-                Value = "",
-                Checksum = ""
-            };
             string serializedReq = JsonConvert.SerializeObject(req) + "\n";
             byte[] buffer = Encoding.ASCII.GetBytes(serializedReq);
             _serialPort.Write(buffer, 0, buffer.Length);

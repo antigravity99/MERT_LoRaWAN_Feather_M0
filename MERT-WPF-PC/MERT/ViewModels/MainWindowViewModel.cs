@@ -24,20 +24,18 @@ namespace MERT
             ClientConnectDevicesObservableCollection = new ObservableCollection<Arduino>();
 
             MoteObservableCollection = new ObservableCollection<ListViewModel>();
-
-            Random rand = new Random();
-
-            //for(int i = 0; i < 16; i++)
-            //{
-            //    MoteObservableCollection.Add(new ListViewModel()
-            //    {
-            //        MoteAddress = $"Mote ID#{i}",
-            //        MoteType = (rand.Next(2) == 0 ) ? Values.DeviceTypes.AmbientTemp.ToString() : (rand.Next(2) == 0 ) ? "Vibration Mote" : "Infrared Temp Mote",
-            //        IsActive = (rand.Next(2) == 0) ? true : false
-            //    });
-            //}
-
+            
             ArduinoManager am = new ArduinoManager();
+
+            for (int i = 0; i < 16; i++)
+            {
+                MoteObservableCollection.Add(new ListViewModel()
+                {
+                    MoteAddress = i,
+                    MoteType = Values.DeviceTypes.Mote.ToString(),
+                    IsActive = false
+                });
+            }
 
             SetupDevicesAndCollectionsAsync(am);
 
@@ -68,7 +66,10 @@ namespace MERT
             if (a.DeviceType == Values.DeviceTypes.Unknown)
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Add(a)));
             else if (a.DeviceType == Values.DeviceTypes.Server)
+            {
+                a.ClientsCollection = MoteObservableCollection;
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Add(a)));
+            }
             else
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Add(a)));
         }

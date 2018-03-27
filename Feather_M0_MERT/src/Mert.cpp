@@ -21,8 +21,8 @@ void Mert::init(bool isServer)
     if(!_accel.begin())
     {
       /* There was a problem detecting the ADXL345 ... check your connections */
-      Serial.println("Ooops, no ADXL345 detected ... Check your wiring!. The program will not progress!");
-      while(1);
+      Serial.println("Ooops, no ADXL345 detected ... Check your wiring!.");
+      // while(1);
     }
 
     /* Set the range to whatever is appropriate for your project */
