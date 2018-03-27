@@ -48,11 +48,11 @@ void loop()
 void server()
 {
   Request req;
-  char *json;
-  if (mert.recvfromAckTimeout(&req, json))
+  String json;
+  if (mert.recvfromAckTimeout(&req, &json))
   {
     // mert.printRequestStruct(&req);
-    //Serial.println(json);
+    Serial.println(json);
   }
   mert.checkSerial();
   // delay(50);

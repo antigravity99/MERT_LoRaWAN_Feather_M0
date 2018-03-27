@@ -120,7 +120,7 @@ class Mert
     void parseJsonRequest(Request *req, char* str);
     void printRequestStruct(Request *req);
     bool sendtoWait(Request req);
-    bool recvfromAckTimeout(Request *req, char* json);
+    bool recvfromAckTimeout(Request *req, String *json);
     bool recvfromAck(Request *req);
     bool managerInit();
     uint8_t getAddress();
