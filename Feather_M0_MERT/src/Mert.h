@@ -9,9 +9,9 @@
 // #include <SPI.h>
 
 //Debugging Serial prints
-#define DEBUG_1
-#define DEBUG_2
-#define DEBUG_3
+// #define DEBUG_1
+// #define DEBUG_2
+// #define DEBUG_3
 
 /* for feather m0 */
 #define RFM95_CS 8

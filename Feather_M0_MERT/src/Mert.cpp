@@ -147,7 +147,9 @@ bool Mert::recvfromAckTimeout(Request *req, char* json)
       Serial.print("Data: ");
       Serial.println((char*)_rcvBuf);
     #endif
-
+    Serial.println((char*)_rcvBuf);
+    strncpy_PF(json, (char*)_rcvBuf, len);
+    Serial.println(json);
     parseJsonRequest(req, (char*)_rcvBuf);
      //Send a reply back to the originator client
      successful = true;
@@ -366,7 +368,7 @@ void Mert::parseJsonRequest(Request *req, char *json)
     req->value = root[VALUE].as<String>();
     req->checksum = root[CHECKSUM].as<String>();
 
-    printRequestStruct(req);
+    // printRequestStruct(req);
 }
 
 Temp Mert::getTemp()

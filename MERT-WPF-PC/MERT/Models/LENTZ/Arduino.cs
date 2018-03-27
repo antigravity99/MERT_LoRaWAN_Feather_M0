@@ -92,7 +92,8 @@ namespace MERT
             {
                 string indata = sp.ReadLine();
                 Debug.WriteLine(indata);
-
+                if (!indata.StartsWith("{\"Address"))
+                    return;
                 Request req = JsonConvert.DeserializeObject<Request>(indata);
 
                 Address = req.Address;
@@ -104,17 +105,17 @@ namespace MERT
                         DeviceType = (Values.DeviceTypes)Enum.Parse(typeof(Values.DeviceTypes), req.Value);
                     }
                 }
-                //else if(req.Cmd.Equals(Cmds.UPDATE_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
-                //{                    
-                //    var items = (from i in _clientsCollection
-                //                    where i.MoteAddress == req.Address
-                //                    select i).ToList();
+                else if (req.Cmd.Equals(Cmds.UPDATE_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
+                {
+                    var items = (from i in _clientsCollection
+                                 where i.MoteAddress == req.Address
+                                 select i).ToList();
 
-                //    if (items.Count > 0)
-                //    {
-                //        items[0].IsActive = true;
-                //    }
-                //}
+                    if (items.Count > 0)
+                    {
+                        items[0].IsActive = true;
+                    }
+                }
 
             }
             catch (Exception ex)
