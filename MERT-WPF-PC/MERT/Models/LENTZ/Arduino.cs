@@ -44,20 +44,8 @@ namespace MERT
                 _deviceType = value;
                 if(this.TypeChanged != null)
                     TypeChanged(this, null);
-
             }
-        }
-
-
-        private const string HUMIDITY_KEY = "HUMIDITY";
-        private const string TEMP_KEY = "TEMP";
-        private const string TYPE_KEY = "TYPE";
-        private const string VIBRATION_KEY = "VIBRATION";
-
-        private const string LOCAL_REQUEST = "LOCAL_REQUEST";
-        private const string LOCAL_UPDATE = "LOCAL_UPDATE";
-        private const string REMOTE_REQUEST = "REMOTE_REQUEST";
-        private const string REMOTE_UPDATE = "REMOTE_UPDATE";
+        }        
 
         private SerialDataReceivedEventHandler _serialDataReceivedEventHandler;
         private SerialPort _serialPort;
@@ -70,33 +58,33 @@ namespace MERT
             int start = caption.IndexOf("COM");
             //Will return something like COM11
             string com = caption.Substring(start, 5);
-            //if on COM3 the previous statement will return COM3) this removes the unwanted )
+            //if on COM3 the previous statement will return COM3) this removes the unwanted ')'
             ComPort = com.Replace(")", "");
 
             _serialDataReceivedEventHandler = new SerialDataReceivedEventHandler(SerialDataReceived);
             if (!ConnectToArduino())
                 return;
             //DeviceTypeRequest();
-            /*WaitToGetDeviceInfo*/();
+            WaitToGetDeviceInfo();
         }
 
-        //private async Task WaitToGetDeviceInfo()
-        //{
-        //    await Task.Delay(3000);
-        //    Request reqResponse = new Request()
-        //    {
-        //        Address = 98,
-        //        Cmd = Cmds.REQUEST_CMD,
-        //        Key = Keys.INIT_KEY,
-        //        Value = Values.INIT_VALUE
-        //    };
-        //    DeviceTypeRequest();
-        //}
+        private async Task WaitToGetDeviceInfo()
+        {
+            await Task.Delay(3000);
+            Request req = new Request()
+            {
+                Address = 98,
+                Cmd = Cmds.REQUEST_CMD,
+                Key = Keys.TYPE_KEY,
+                Value = Values.BLANK_VALUE
+            };
+            SerailRequest(req);
+        }
 
         private void SerialDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             SerialPort sp = (SerialPort)sender;
-            
+
             //int bs = sp.ReadBufferSize;
             //Debug.WriteLine("buffer size: " + bs);
 
@@ -116,31 +104,18 @@ namespace MERT
                         DeviceType = (Values.DeviceTypes)Enum.Parse(typeof(Values.DeviceTypes), req.Value);
                     }
                 }
-                else if(req.Cmd.Equals(Cmds.UPDATE_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
-                {
-                    //if(req.Key.Equals(Keys.))
-                }
-                else if (req.Cmd.Equals(Cmds.REQUEST_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
-                {
-                    if (req.Key.Equals(Keys.INIT_KEY))
-                    {
-                        var items = (from i in _clientsCollection
-                                     where i.MoteAddress == req.Address
-                                     select i).ToList();
-                        if (items.Count > 0)
-                        {
-                            items[0].IsActive = true;
-                            Request reqResponse = new Request()
-                            {
-                                Address = req.Address,
-                                Cmd = Cmds.REQUEST_RESPONSE_CMD,
-                                Key = Keys.INIT_KEY,
-                                Value = Values.INIT_VALUE
-                            };
+                //else if(req.Cmd.Equals(Cmds.UPDATE_CMD) && _deviceType.Equals(Values.DeviceTypes.Server.ToString()))
+                //{                    
+                //    var items = (from i in _clientsCollection
+                //                    where i.MoteAddress == req.Address
+                //                    select i).ToList();
 
-                        }
-                    }
-                }
+                //    if (items.Count > 0)
+                //    {
+                //        items[0].IsActive = true;
+                //    }
+                //}
+
             }
             catch (Exception ex)
             {
@@ -170,7 +145,7 @@ namespace MERT
             }
         }
 
-        private void DeviceTypeRequest(Request req)
+        private void SerailRequest(Request req)
         {
             string serializedReq = JsonConvert.SerializeObject(req) + "\n";
             byte[] buffer = Encoding.ASCII.GetBytes(serializedReq);

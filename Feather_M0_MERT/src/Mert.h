@@ -5,7 +5,7 @@
 #include "Adafruit_ADXL345_U.h"
 #include "Adafruit_TMP007.h"
 #include "Adafruit_Sensor.h"
-#include <Wire.h>
+// #include <Wire.h>
 // #include <SPI.h>
 
 //Debugging Serial prints
@@ -42,11 +42,9 @@
 #define TYPE_KEY "TYPE"
 #define VIBRATION_KEY "VIBRATION"
 #define SAMPLE_RATE_KEY "SAMPLE_RATE"
-#define INIT_KEY "INIT"
 
 #define SERVER_VALUE "Server"
 #define MOTE_VALUE "Mote"
-#define INIT_VALUE "INIT";
 
 //Acknowledgement reply
 #define ACK "ack"

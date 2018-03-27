@@ -1,6 +1,7 @@
 #include "Mert.h"
 
-bool isServer = false;
+#define SERVER
+
 int count = 0;
 
 void server();
@@ -13,7 +14,11 @@ Mert mert;
 void setup()
 {
   delay(5000);
-  mert.init(isServer);
+#ifdef SERVER
+  mert.init(true);
+#else
+  mert.init(false);
+#endif
 
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -31,25 +36,28 @@ void loop()
 {
     // Serial.print("\rloop ");
     // Serial.print(count++);
-    if(isServer)
-      server();
-    else
-      client();
+#ifdef SERVER
+  server();
+#else
+  client();
+#endif
+
 }
 
-
+#ifdef SERVER
 void server()
 {
   Request req;
   char *json;
   if (mert.recvfromAckTimeout(&req, json))
   {
-    mert.printRequestStruct(&req);
+    // mert.printRequestStruct(&req);
+    Serial.println(json);
   }
   mert.checkSerial();
   // delay(50);
 }
-
+#else
 void client()
 {
   Temp t = mert.getTemp();
@@ -74,3 +82,4 @@ void client()
   delay(1000);
   mert.checkSerial();
 }
+#endif
