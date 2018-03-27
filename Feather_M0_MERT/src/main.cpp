@@ -1,6 +1,6 @@
 #include "Mert.h"
 
-#define SERVER
+// #define SERVER
 
 int count = 0;
 

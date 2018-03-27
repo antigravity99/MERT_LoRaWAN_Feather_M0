@@ -88,11 +88,15 @@ bool Mert::sendtoWait(Request req)
   char buff[j];
   strncpy_PF(buff, temp, j);
   free(temp);
+  String str = String(buff);
+  char charBuff[str.length()];
+  str.toCharArray(charBuff, str.length());
+
 #ifdef DEBUG_2
-  Serial.print("sendToWait buff: "); Serial.println(buff);
+  Serial.print("sendToWait buff: "); Serial.println(charBuff);
 #endif
   // Send a message to manager_server
-  if (_manager.sendtoWait((uint8_t*)buff, sizeof(buff), SERVER_ADDRESS))
+  if (_manager.sendtoWait((uint8_t*)charBuff, sizeof(charBuff), SERVER_ADDRESS))
   {
     // Now wait for a reply from the server
     uint8_t len = sizeof(_rcvBuf);
