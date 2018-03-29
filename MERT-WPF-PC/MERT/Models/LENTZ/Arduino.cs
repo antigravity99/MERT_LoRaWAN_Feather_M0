@@ -14,7 +14,7 @@ namespace MERT
     {
         public static readonly int MAX_ADDRESS = 99;
 
-        //private ObservableCollection<ListViewModel> _clientsCollection;
+        //private TrulyObservableCollection<ListViewModel> _clientsCollection;
 
 
         private ObservableCollection<ListViewModel> _clientsCollection;
@@ -49,6 +49,8 @@ namespace MERT
 
         private SerialDataReceivedEventHandler _serialDataReceivedEventHandler;
         private SerialPort _serialPort;
+
+        private DbHelper _dbHelper = new DbHelper();
 
         public Arduino(ManagementBaseObject mbObject)
         {
@@ -95,7 +97,7 @@ namespace MERT
                 if (!indata.StartsWith("{\"Address"))
                     return;
                 Request req = JsonConvert.DeserializeObject<Request>(indata);
-                
+
                 Address = req.Address;
 
                 if (req.Cmd.Equals(Cmds.REQUEST_RESPONSE_CMD))
@@ -107,14 +109,20 @@ namespace MERT
                 }
                 else if (req.Cmd.Equals(Cmds.SEND_CMD) && _deviceType.Equals(Values.DeviceTypes.Server))
                 {
-                    var items = (from i in _clientsCollection
-                                 where i.MoteAddress == req.Address
-                                 select i).ToList();
+                    if (req.Key.Equals(Keys.TEMP_IR_KEY) || req.Key.Equals(Keys.TEMP_DIE_KEY) || req.Key.Equals(Keys.VIBRATION_KEY))
+                        _dbHelper.InsertReading(req);
 
-                    if (items.Count > 0)
-                    {
-                        items[0].IsActive = true;
-                    }
+                    //var items = (from i in _clientsCollection
+                    //             where i.MoteAddress == req.Address
+                    //             select i).ToList();
+
+                    //if (items.Count > 0)
+                    //{
+                    //    //_clientsCollection.Remove(items[0]);
+                    //    items[0].IsActive = true;
+                    //    //_clientsCollection.Add(items[0]);
+
+                    //}
                 }
 
             }

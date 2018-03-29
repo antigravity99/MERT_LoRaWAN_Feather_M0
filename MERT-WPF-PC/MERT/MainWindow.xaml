@@ -3,9 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:d3="clr-namespace:InteractiveDataDisplay.WPF;assembly=InteractiveDataDisplay.WPF"
         xmlns:local="clr-namespace:MERT"
         mc:Ignorable="d"
-        Title="M.E.R.T." MinHeight="800" MinWidth="600" Icon="mert_icon.ico">
+        Title="M.E.R.T." WindowState="Maximized" Height="800" Width="1200" MinHeight="800" MinWidth="1200" Icon="mert_icon.ico" >
     <Window.Resources>
         <local:MoteIsActiveBoolToBackgroundColorConverter x:Key="MoteIsActiveBoolToBackgroundColorConverter" />
         <local:MoteIsActiveBoolToStringConverter x:Key="MoteIsActiveBoolToStringConverter" />
@@ -18,10 +20,11 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="17*"/>
+            <ColumnDefinition Width="210"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <TextBlock Text="Motes" Grid.Column="0" Grid.Row="0" />
-        <ListView  Grid.Column="0" Grid.Row="1" ItemsSource="{Binding MoteObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+        <ListView  Grid.Column="0" Grid.Row="1" ItemsSource="{Binding MoteObservableCollection}" SelectedIndex="{Binding SelectedAddress}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Border Background="{Binding Path=IsActive, Converter={StaticResource MoteIsActiveBoolToBackgroundColorConverter}}" BorderBrush="Black" BorderThickness="2" Margin="2">
@@ -48,13 +51,13 @@
             </ListView.ItemTemplate>
         </ListView>
         <TextBlock Text="Motes" Grid.Column="0" Grid.Row="2" />
-        <StackPanel Grid.Column="1" Grid.Row="1">
+        <StackPanel Grid.Column="1" Grid.Row="1" Margin="0.4,0.4,41.2,48.4" Grid.RowSpan="2">
             <Label Content="USB Connected Servers"  HorizontalAlignment="Left" Margin="4" />
-            <ListView HorizontalAlignment="Left" Grid.Column="0" Grid.Row="1" Width="200" Height="150" ItemsSource="{Binding ServerConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+            <ListView HorizontalAlignment="Left" Grid.Column="0" Grid.Row="1" Width="165" Height="150" ItemsSource="{Binding ServerConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Border Width="145" BorderBrush="Black" BorderThickness="2" Margin="2">
-                            <StackPanel Width="215" Orientation="Horizontal">
+                            <StackPanel Width="150" Orientation="Horizontal">
                                 <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock>
@@ -73,11 +76,11 @@
                 </ListView.ItemTemplate>
             </ListView>
             <Label Content="USB Connected Clients"  HorizontalAlignment="Left" Margin="4" />
-            <ListView HorizontalAlignment="Left"  Grid.Column="0" Grid.Row="1" Width="200" Height="150" ItemsSource="{Binding ClientConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+            <ListView HorizontalAlignment="Left"  Grid.Column="0" Grid.Row="1" Width="165" Height="150" ItemsSource="{Binding ClientConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Border Width="145" BorderBrush="Black" BorderThickness="2" Margin="2">
-                            <StackPanel Width="215" Orientation="Horizontal">
+                            <StackPanel Width="150" Orientation="Horizontal">
                                 <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock>
@@ -96,28 +99,49 @@
                 </ListView.ItemTemplate>
             </ListView>
             <Label Content="Unknown USB Devices"  HorizontalAlignment="Left" Margin="4" />
-            <ListView  HorizontalAlignment="Left" Grid.Column="0" Grid.Row="1" Width="200" Height="150" ItemsSource="{Binding UnknownConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+            <ListView  HorizontalAlignment="Left" Width="165" Height="150" ItemsSource="{Binding UnknownConnectDevicesObservableCollection}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Border Width="145" BorderBrush="Black" BorderThickness="2" Margin="2">
-                            <StackPanel Width="215" Orientation="Horizontal">
+                            <StackPanel Width="150" Orientation="Horizontal">
                                 <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
                                 <StackPanel Orientation="Vertical">
-                                    <TextBlock>
-                                        <TextBlock.Inlines>
-                                            <Run>Type:</Run>
-                                            <Run Text="{Binding DeviceType}" />
-                                            <LineBreak />
-                                            <Run>Address:</Run>
-                                            <Run Text="{Binding Address}" />
-                                        </TextBlock.Inlines>
-                                    </TextBlock>
+                                    <TextBlock><Run Text="Type:"/><Run Text=" "/><Run Text="{Binding DeviceType}" /><LineBreak /><Run Text="Address:"/><Run Text=" "/><Run Text="{Binding Address}" /></TextBlock>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Grid.Row="0" Grid.RowSpan="2">
+            <StackPanel Orientation="Horizontal">
+                <StackPanel Margin="10">
+                    <Label>Reading Type Filter:</Label>
+                    <ComboBox ItemsSource="{Binding SensorReadingTypes}" SelectedItem="{Binding SelectedReadingTypeFilter}" />
+                </StackPanel>
+                <Grid Margin="10">
+                    <CheckBox VerticalAlignment="Bottom" IsChecked="{Binding SelectTop2000Rows}">Select Top 2000 rows</CheckBox>
+                </Grid>
+                <StackPanel Margin="10">
+                    <Label>Minimum DateTime:</Label>
+                    <xctk:DateTimePicker Width="250" IsEnabled="{Binding DatePickerEnabled}" Text="{Binding MinimumDateTimeFilter}" />
+                </StackPanel>
+                <StackPanel Margin="10">
+                    <Label>Maximum DateTime:</Label>
+                    <xctk:DateTimePicker Width="250" IsEnabled="{Binding DatePickerEnabled}" Text="{Binding MaximumDateTimeFilter}" />
+                </StackPanel>
+            </StackPanel>
+            <DataGrid ItemsSource="{Binding SensorReadingsObservableCollection}" AutoGenerateColumns="True" Margin="0,0,10.4,0" Height="239"/>
+            <Grid Height="184" Margin="0,0,0.4,0">
+                <d3:Chart Name="plotter" Margin="0,0,0,-268">
+                    <d3:Chart.Title>
+                        <TextBlock HorizontalAlignment="Center" FontSize="18" Margin="0,5,0,5">Accelerometer Graph From Data Table</TextBlock>
+                    </d3:Chart.Title>
+                    <Grid Name="lines" />
+                </d3:Chart>
+            </Grid>
+
         </StackPanel>
     </Grid>
 </Window>

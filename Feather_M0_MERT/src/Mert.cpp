@@ -64,9 +64,9 @@ bool Mert::managerInit()
   return true;
 }
 
-uint8_t Mert::serailizeRequest(Request req, char *buff)
+String Mert::serailizeRequest(Request req)
 {
-  StaticJsonBuffer<200> jsonBuffer;
+  StaticJsonBuffer<251> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
   root[ADDRESS] = req.address;
@@ -74,29 +74,32 @@ uint8_t Mert::serailizeRequest(Request req, char *buff)
   root[KEY] = req.key;
   root[VALUE] = req.value;
   root[CHECKSUM] = req.checksum;
+  String s;
+  root.printTo(s);
+  return s;
 
-  root.printTo(buff, root.measureLength()+1);
-
-  return root.measureLength();
+  // return root.measureLength();
 }
 
 bool Mert::sendtoWait(Request req)
 {
   bool successful = false;
-  char *temp = (char *) malloc(sizeof(char) * 251);
-  int j = serailizeRequest(req, temp);
-  char buff[j];
-  strncpy_PF(buff, temp, j);
-  free(temp);
-  String str = String(buff);
-  char charBuff[str.length()];
-  str.toCharArray(charBuff, str.length());
+  // char *temp = (char *) malloc(sizeof(char) * 251);
+  // int j = serailizeRequest(req, temp);
+  String json = serailizeRequest(req);
+  char buff[json.length()+1];
+  json.toCharArray(buff, json.length()+1);
+  // strncpy_PF(buff, temp, j);
+  // free(temp);
+  // String str = String(buff);
+  // char charBuff[str.length()];
+  // str.toCharArray(charBuff, str.length());
 
 #ifdef DEBUG_2
-  Serial.print("sendToWait buff: "); Serial.println(charBuff);
+  Serial.print("sendToWait buff: "); Serial.println(buff);
 #endif
   // Send a message to manager_server
-  if (_manager.sendtoWait((uint8_t*)charBuff, sizeof(charBuff), SERVER_ADDRESS))
+  if (_manager.sendtoWait((uint8_t*)buff, sizeof(buff), SERVER_ADDRESS))
   {
     // Now wait for a reply from the server
     uint8_t len = sizeof(_rcvBuf);
@@ -329,10 +332,10 @@ void Mert::processRequestCmd(Request req)
     returnReq.value = _moteType;
     returnReq.checksum = "";
 
-    char *buff = (char *) malloc(sizeof(char) * 251);
-    serailizeRequest(returnReq, buff);
-    Serial.println(String(buff));
-    free(buff);
+    // char *buff = (char *) malloc(sizeof(char) * 251);
+    String json = serailizeRequest(returnReq);
+    Serial.println(json);
+    // free(buff);
 
     // char req[251];
     // returnRequest(req, REQUEST_RESPONSE_CMD, TYPE_KEY, MY_TYPE);
@@ -404,7 +407,7 @@ uint16_t Mert::getAccelMag()
 
 uint8_t Mert::getAddress()
 {
-  uint8_t val[4] = {0,1,1,1};
+  uint8_t val[4] = {0,0,1,0};
   uint8_t address = -1;
     if(val[0])
       address += 1;

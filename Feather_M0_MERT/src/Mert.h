@@ -10,7 +10,7 @@
 
 //Debugging Serial prints
 // #define DEBUG_1
-// #define DEBUG_2
+#define DEBUG_2
 // #define DEBUG_3
 
 /* for feather m0 */
@@ -100,7 +100,7 @@ class Mert
 
     //Private method
     char checksum(char* s);
-    uint8_t serailizeRequest(Request req, char *buff);
+    String serailizeRequest(Request req);
 
   public:
     //public methods
