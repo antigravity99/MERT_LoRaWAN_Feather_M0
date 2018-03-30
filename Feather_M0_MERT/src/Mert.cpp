@@ -73,7 +73,7 @@ String Mert::serailizeRequest(Request req)
   root[CMD] = req.cmd;
   root[KEY] = req.key;
   root[VALUE] = req.value;
-  root[CHECKSUM] = req.checksum;
+  // root[CHECKSUM] = req.checksum;
   String s;
   root.printTo(s);
   return s;
@@ -330,7 +330,7 @@ void Mert::processRequestCmd(Request req)
     returnReq.cmd = REQUEST_RESPONSE_CMD;
     returnReq.key = TYPE_KEY;
     returnReq.value = _moteType;
-    returnReq.checksum = "";
+    // returnReq.checksum = "";
 
     // char *buff = (char *) malloc(sizeof(char) * 251);
     String json = serailizeRequest(returnReq);
@@ -369,7 +369,7 @@ void Mert::parseJsonRequest(Request *req, char *json)
     req->cmd = root[CMD].as<String>();
     req->key = root[KEY].as<String>();
     req->value = root[VALUE].as<String>();
-    req->checksum = root[CHECKSUM].as<String>();
+    // req->checksum = root[CHECKSUM].as<String>();
 
     // printRequestStruct(req);
 }
@@ -386,21 +386,31 @@ Temp Mert::getTemp()
   return temp;
 }
 
-uint16_t Mert::getAccelMag()
+String Mert::getAccelMag()
 {
-  // /* Get a new sensor event */
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonArray &array = jsonBuffer.createArray();
+  unsigned long t = millis();
+  for (int i = 0; i < 15; i++)
+  {
+    // /* Get a new sensor event */
     sensors_event_t event;
     _accel.getEvent(&event);
 
     /* Display the results (acceleration is measured in m/s^2) */
     //changed to be int instead of m/s^
-    Serial.println("Accelerometer readings are:");
-    Serial.print("X: "); Serial.print(event.acceleration.x); Serial.print("  ");
-    Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print("  ");
-    Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print("  ");Serial.println("m/s^2 ");
+    // Serial.println("Accelerometer readings are:");
+    // Serial.print("X: "); Serial.print(event.acceleration.x); Serial.print("  ");
+    // Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print("  ");
+    // Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print("  ");Serial.println("m/s^2 ");
 
-    uint16_t magnitude = sqrt((event.acceleration.x * event.acceleration.x) + (event.acceleration.y * event.acceleration.y) + (event.acceleration.z * event.acceleration.z));
-    return magnitude;
+    array.add(sqrt((event.acceleration.x * event.acceleration.x) + (event.acceleration.y * event.acceleration.y) + (event.acceleration.z * event.acceleration.z)));
+  }
+    unsigned long len = millis() - t;
+    Serial.println(len);
+    String s;
+    array.printTo(s);
+    return s;
 }
 
 
@@ -449,8 +459,8 @@ void Mert::printRequestStruct(Request *req)
   Serial.println(req->key);
   Serial.print("Stored value: ");
   Serial.println(req->value);
-  Serial.print("Stored checksum: ");
-  Serial.println(req->checksum);
+  // Serial.print("Stored checksum: ");
+  // Serial.println(req->checksum);
   // Serial.print("Stored isVerified: ");
   // Serial.println(req->isVerified);
   // Serial.print("Stored fullTransmission: ");

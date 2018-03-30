@@ -60,14 +60,20 @@ void server()
 #else
 void client()
 {
-  Temp t = mert.getTemp();
+  // Temp t = mert.getTemp();
   // uint16_t m = mert.getAccelMag();
+
+  String accelArr = mert.getAccelMag();
+
+
 
   Request req;
   req.address = mert.getMoteAddress();
   req.cmd = SEND_CMD;
-  req.key = TEMP_IR_KEY;
-  req.value = String(t.irTemp);
+  req.key = VIBRATION_KEY;
+  req.value = accelArr;
+  // req.key = TEMP_IR_KEY;
+  // req.value = String(t.irTemp);
 
 
   // Serial.print("IR temp: "); Serial.println(t.irTemp);

@@ -68,7 +68,7 @@ typedef struct Request
   String cmd;
   String key;
   String value;
-  String checksum;
+  // String checksum;
 } Request;
 
 typedef struct Temp
@@ -125,6 +125,6 @@ class Mert
     bool managerInit();
     uint8_t getAddress();
     Temp getTemp();
-    uint16_t getAccelMag();
+    String getAccelMag();
 
 };
