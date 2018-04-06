@@ -10,8 +10,8 @@
 
 //Debugging Serial prints
 // #define DEBUG_1
-#define DEBUG_2
-// #define DEBUG_3
+// #define DEBUG_2
+#define DEBUG_3
 
 /* for feather m0 */
 #define RFM95_CS 8
@@ -27,20 +27,20 @@
 //Temp data register
 #define TMP_DATA_REG 0x03
 //Adafruit_ADXL345 Accelerometer ID
-#define ADXL345_ADDRESS 12345
+// #define ADXL345_ADDRESS 12345
 
 
 //Dip switch pins for addressing
-#define PIN_1 10
-#define PIN_2 11
-#define PIN_3 12
-#define PIN_4 13
+#define DIP_1 12
+#define DIP_2 11
+#define DIP_3 10
+#define DIP_4 6
 
 #define HUMIDITY_KEY "HUMIDITY"
 #define TEMP_IR_KEY "TEMP_IR"
 #define TEMP_DIE_KEY "TEMP_DIE"
 #define TYPE_KEY "TYPE"
-#define VIBRATION_KEY "VIBRATION"
+#define VIBRATION_KEY "VIB"
 #define SAMPLE_RATE_KEY "SAMPLE_RATE"
 
 #define SERVER_VALUE "Server"
@@ -55,27 +55,30 @@
 #define SEND_CMD "S"
 #define REQUEST_RESPONSE_CMD "Q"
 //Json keys
-#define ADDRESS "Address"
+#define ADDRESS "Add"
 #define CMD "Cmd"
 #define KEY "Key"
-#define VALUE "Value"
-#define CHECKSUM "Checksum"
+#define VALUE "Val"
+// #define CHECKSUM "Checksum"
+
+#define VIB_SAMPLES 65
 
 //Request structure - Json will be deserialized to this
-typedef struct Request
+typedef struct
 {
   uint8_t address = -1;
   String cmd;
   String key;
   String value;
+  uint16_t *vibBuff;
   // String checksum;
-} Request;
+} request_t;
 
-typedef struct Temp
+typedef struct
 {
   float irTemp;
   float dieTemp;
-} Temp;
+} temp_t;
 
 //Mert communication class
 class Mert
@@ -100,7 +103,7 @@ class Mert
 
     //Private method
     char checksum(char* s);
-    String serailizeRequest(Request req);
+    String serailizeRequest(request_t req);
 
   public:
     //public methods
@@ -110,21 +113,21 @@ class Mert
     uint8_t getMoteAddress();
     void checkSerial();
     void serialEvent(String serialData);
-    void processReq(Request req);
-    void verifyChecksum(Request *req, char *token);
-    void processUpdateCmd(Request req);
-    void processRequestCmd(Request req);
+    void processReq(request_t req);
+    void verifyChecksum(request_t *req, char *token);
+    void processUpdateCmd(request_t req);
+    void processRequestCmd(request_t req);
     // void returnRequest(char req[], char cmd[], char key[], char value[]);
     void forwardMessage(uint8_t address, char message[]);
     // void parseRequest(request *req, char* str);//maybe able to delete this
-    void parseJsonRequest(Request *req, char* str);
-    void printRequestStruct(Request *req);
-    bool sendtoWait(Request req);
-    bool recvfromAckTimeout(Request *req, String *json);
-    bool recvfromAck(Request *req);
+    void parseJsonRequest(request_t *req, char* str);
+    void printRequestStruct(request_t *req);
+    bool sendtoWait(request_t req);
+    bool recvfromAckTimeout(request_t *req, String *json);
+    bool recvfromAck(request_t *req);
     bool managerInit();
     uint8_t getAddress();
-    Temp getTemp();
-    String getAccelMag();
+    temp_t getTemp();
+    uint16_t* getAccelMagArray();
 
 };

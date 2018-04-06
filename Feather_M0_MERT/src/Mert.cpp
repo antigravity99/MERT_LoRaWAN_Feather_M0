@@ -28,8 +28,8 @@ void Mert::init(bool isServer)
     /* Set the range to whatever is appropriate for your project */
     // _accel.setRange(ADXL345_RANGE_16_G);
     // _accel.setRange(ADXL345_RANGE_8_G);
-    // _accel.setRange(ADXL345_RANGE_4_G);
-    _accel.setRange(ADXL345_RANGE_2_G);
+    _accel.setRange(ADXL345_RANGE_4_G);
+    // _accel.setRange(ADXL345_RANGE_2_G);
   }
 }
 
@@ -64,9 +64,9 @@ bool Mert::managerInit()
   return true;
 }
 
-String Mert::serailizeRequest(Request req)
+String Mert::serailizeRequest(request_t req)
 {
-  StaticJsonBuffer<251> jsonBuffer;
+  StaticJsonBuffer<500> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
   root[ADDRESS] = req.address;
@@ -81,22 +81,39 @@ String Mert::serailizeRequest(Request req)
   // return root.measureLength();
 }
 
-bool Mert::sendtoWait(Request req)
+bool Mert::sendtoWait(request_t req)
 {
   bool successful = false;
-  // char *temp = (char *) malloc(sizeof(char) * 251);
-  // int j = serailizeRequest(req, temp);
+
   String json = serailizeRequest(req);
-  char buff[json.length()+1];
+  char buff[171];
   json.toCharArray(buff, json.length()+1);
-  // strncpy_PF(buff, temp, j);
-  // free(temp);
-  // String str = String(buff);
-  // char charBuff[str.length()];
-  // str.toCharArray(charBuff, str.length());
+
+  if(req.key == VIBRATION_KEY)
+  {
+    uint8_t j = 0;
+    for (uint8_t i = 38; i < 168; i++)
+    {
+      char lo = req.vibBuff[j] & 0xFF;
+      char hi = req.vibBuff[j++] >> 8;
+      buff[i++] = hi;
+      // Serial.println(buff[i]);
+      buff[i] = lo;
+    }
+    buff[168] = '"';
+    buff[169] = '}';
+    buff[170] = (uint8_t)0;
+  }
+
+
 
 #ifdef DEBUG_2
-  Serial.print("sendToWait buff: "); Serial.println(buff);
+  for(int i = 0; i < 171; i++)
+  {
+      Serial.print(buff[i]);
+  }
+  // Serial.print("sendToWait buff: ");
+  Serial.println("");
 #endif
   // Send a message to manager_server
   if (_manager.sendtoWait((uint8_t*)buff, sizeof(buff), SERVER_ADDRESS))
@@ -131,11 +148,15 @@ bool Mert::sendtoWait(Request req)
       Serial.println("sendtoWait failed");
 #endif
   }
+  #ifdef DEBUG_1
+        Serial.print("Successful: "); Serial.println(successful);
+  #endif
+  free(req.vibBuff);
   return successful;
 
 }
 
-bool Mert::recvfromAckTimeout(Request *req, String *json)
+bool Mert::recvfromAckTimeout(request_t *req, String *json)
 {
   bool successful = false;
   // Wait for a message addressed to us from the client
@@ -149,11 +170,50 @@ bool Mert::recvfromAckTimeout(Request *req, String *json)
       Serial.println(from, DEC);
       Serial.print("Data: ");
       Serial.println((char*)_rcvBuf);
+      for(int i = 0; i < 170; i++)
+      {
+          Serial.print((char)_rcvBuf[i]);
+      }
     #endif
     // Serial.println((char*)_rcvBuf);
-    json->concat((char*)_rcvBuf);
-    // Serial.println(*json);
-    parseJsonRequest(req, (char*)_rcvBuf);
+
+    // Serial.print("Size of _rcvBuf: "); Serial.println(sizeof(_rcvBuf));
+    // Serial.print("Size of json string: "); Serial.println(sizeof(json));
+    // Serial.println((char)_rcvBuf[26]);
+
+    StaticJsonBuffer<1000> jsonBuffer;
+    JsonArray &array = jsonBuffer.createArray();
+
+    if((char)_rcvBuf[26] == 'V' && (char)_rcvBuf[27] == 'I' && (char)_rcvBuf[28] == 'B')
+    {
+      for (uint8_t i = 38; i < 168; i++)
+      {
+        uint16_t mag = _rcvBuf[i+1] | uint16_t(_rcvBuf[i]) << 8;
+        i++;
+        array.add(mag);
+      }
+      // array.printTo(Serial);
+
+      _rcvBuf[38] = '\0';
+
+      json->concat((char*)_rcvBuf);
+      String s;
+      array.printTo(s);
+      json->concat(s);
+      json->concat('"');
+      json->concat('}');
+
+      char buff[json->length()];
+      json->toCharArray(buff, json->length()+1);
+      parseJsonRequest(req, buff);
+    }
+    else
+    {
+      parseJsonRequest(req, (char *)_rcvBuf);
+    }
+    // _rcvBuf[38] = '"';
+    // _rcvBuf[39] = '}';
+
      //Send a reply back to the originator client
      successful = true;
      uint8_t ackBuff[] = "ack";
@@ -168,7 +228,7 @@ bool Mert::recvfromAckTimeout(Request *req, String *json)
   return successful;
 }
 
-bool Mert::recvfromAck(Request *req)
+bool Mert::recvfromAck(request_t *req)
 {
   bool successful = false;
   // Wait for a message addressed to us from the client
@@ -234,7 +294,7 @@ void Mert::serialEvent(String serialData)
   Serial.println(serialData);
 #endif
 
-  Request req;
+  request_t req;
   int len = serialData.length();
   char buff[len+1];
   serialData.toCharArray(buff, len+1);
@@ -260,7 +320,7 @@ void Mert::serialEvent(String serialData)
     // processReq(req);
 }
 
-void Mert::processReq(Request req)
+void Mert::processReq(request_t req)
 {
 #ifdef DEBUG_3
   Serial.print("cmd: ");
@@ -295,7 +355,7 @@ else if(req.cmd == UPDATE_CMD)
 //   }
 }
 
-void Mert::processUpdateCmd(Request req)
+void Mert::processUpdateCmd(request_t req)
 {
 #ifdef DEBUG_1
   Serial.println("Got an update Command");
@@ -311,7 +371,7 @@ void Mert::processUpdateCmd(Request req)
 
 }
 
-void Mert::processRequestCmd(Request req)
+void Mert::processRequestCmd(request_t req)
 {
 #ifdef DEBUG_1
   Serial.println("Got a request Command");
@@ -325,7 +385,7 @@ void Mert::processRequestCmd(Request req)
     Serial.print("Process CMD type: ");
     Serial.println(TYPE_KEY);
 #endif
-    Request returnReq;
+    request_t returnReq;
     returnReq.address = _moteAddress;
     returnReq.cmd = REQUEST_RESPONSE_CMD;
     returnReq.key = TYPE_KEY;
@@ -352,9 +412,9 @@ void Mert::forwardMessage(uint8_t address, char message[])
   Serial.println("Not yet implemented");
 }
 
-void Mert::parseJsonRequest(Request *req, char *json)
+void Mert::parseJsonRequest(request_t *req, char *json)
 {
-  StaticJsonBuffer<200> jsonBuffer;
+  StaticJsonBuffer<800> jsonBuffer;
 #ifdef DEBUG_1
   Serial.print("ParseJsonRequest json: ");
    Serial.println(json);
@@ -374,9 +434,9 @@ void Mert::parseJsonRequest(Request *req, char *json)
     // printRequestStruct(req);
 }
 
-Temp Mert::getTemp()
+temp_t Mert::getTemp()
 {
-  Temp temp;
+  temp_t temp;
   // Output data to serial monitor
   temp.irTemp = _tmp007.readObjTempC();
   Serial.print("Object Temperature: "); Serial.print(temp.irTemp); Serial.println("*C");
@@ -386,12 +446,13 @@ Temp Mert::getTemp()
   return temp;
 }
 
-String Mert::getAccelMag()
+uint16_t* Mert::getAccelMagArray()
 {
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonArray &array = jsonBuffer.createArray();
-  unsigned long t = millis();
-  for (int i = 0; i < 15; i++)
+  uint16_t *buffer = (uint16_t*)malloc(sizeof(uint16_t) * 64);
+
+  unsigned long t = micros();
+
+  for (uint8_t i = 0; i < VIB_SAMPLES-1; i++)
   {
     // /* Get a new sensor event */
     sensors_event_t event;
@@ -404,51 +465,62 @@ String Mert::getAccelMag()
     // Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print("  ");
     // Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print("  ");Serial.println("m/s^2 ");
 
-    array.add(sqrt((event.acceleration.x * event.acceleration.x) + (event.acceleration.y * event.acceleration.y) + (event.acceleration.z * event.acceleration.z)));
+    // uint16_t mag = ;
+    buffer[i] = sqrt((event.acceleration.x * event.acceleration.x) + (event.acceleration.y * event.acceleration.y) + (event.acceleration.z * event.acceleration.z)) * 1000;
+
+    //Makes the sample rate 300Hz
+    // delayMicroseconds(1662);
   }
-    unsigned long len = millis() - t;
-    Serial.println(len);
-    String s;
-    array.printTo(s);
-    return s;
+
+  double sampleRate = 1 / ((micros() - t) / 1000000.0 / VIB_SAMPLES);
+#ifdef DEBUG_3
+  Serial.print("Sample rate: "); Serial.print(sampleRate); Serial.println("Hz");
+#endif
+  buffer[VIB_SAMPLES-1] = sampleRate * 100;
+  return buffer;
 }
 
 
 
-uint8_t Mert::getAddress()
-{
-  uint8_t val[4] = {0,0,1,0};
-  uint8_t address = -1;
-    if(val[0])
-      address += 1;
-    if(val[1])
-      address += 2;
-    if(val[2])
-      address += 4;
-    if(val[3])
-      address += 8;
-    address += 1;
-  return address;
-}
-
-
-// uint8_t getAddress()
+// uint8_t Mert::getAddress()
 // {
+//   uint8_t val[4] = {0,0,1,0};
 //   uint8_t address = -1;
-//   if(digitalRead(PIN_1))
+//     if(val[0])
 //       address += 1;
-//   if(digitalRead(PIN_2))
+//     if(val[1])
 //       address += 2;
-//   if(digitalRead(PIN_3))
+//     if(val[2])
 //       address += 4;
-//   if(digitalRead(PIN_4))
+//     if(val[3])
 //       address += 8;
 //     address += 1;
 //   return address;
 // }
 
 
-void Mert::printRequestStruct(Request *req)
+uint8_t Mert::getAddress()
+{
+  // Serial.println(digitalRead(DIP_4));
+  // Serial.println(digitalRead(DIP_3));
+  // Serial.println(digitalRead(DIP_2));
+  // Serial.println(digitalRead(DIP_1));
+  uint8_t address = -1;
+  if(digitalRead(DIP_4))
+      address += 1;
+  if(digitalRead(DIP_3))
+      address += 2;
+  if(digitalRead(DIP_2))
+      address += 4;
+  if(digitalRead(DIP_1))
+      address += 8;
+  address += 1;
+  Serial.print("Address: "); Serial.println(address);
+  return address;
+}
+
+
+void Mert::printRequestStruct(request_t *req)
 {
 // #ifdef DEBUG_2
   Serial.print("Address: ");

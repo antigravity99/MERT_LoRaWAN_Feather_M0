@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace MERT
 {
@@ -75,10 +76,10 @@ namespace MERT
             await Task.Delay(3000);
             Request req = new Request()
             {
-                Address = 98,
+                Add = 98,
                 Cmd = Cmds.REQUEST_CMD,
                 Key = Keys.TYPE_KEY,
-                Value = Values.BLANK_VALUE
+                Val = Values.BLANK_VALUE
             };
             SerailRequest(req);
         }
@@ -94,23 +95,41 @@ namespace MERT
             {
                 string indata = sp.ReadLine();
                 Debug.WriteLine(indata);
-                if (!indata.StartsWith("{\"Address"))
+                if (!indata.StartsWith("{\"Add"))
                     return;
                 Request req = JsonConvert.DeserializeObject<Request>(indata);
 
-                Address = req.Address;
+                Address = req.Add;
 
                 if (req.Cmd.Equals(Cmds.REQUEST_RESPONSE_CMD))
                 {
                     if (req.Key.Equals(Keys.TYPE_KEY))
                     {
-                        DeviceType = (Values.DeviceTypes)Enum.Parse(typeof(Values.DeviceTypes), req.Value);
+                        DeviceType = (Values.DeviceTypes)Enum.Parse(typeof(Values.DeviceTypes), req.Val);
                     }
                 }
                 else if (req.Cmd.Equals(Cmds.SEND_CMD) && _deviceType.Equals(Values.DeviceTypes.Server))
                 {
+
                     if (req.Key.Equals(Keys.TEMP_IR_KEY) || req.Key.Equals(Keys.TEMP_DIE_KEY) || req.Key.Equals(Keys.VIBRATION_KEY))
-                        _dbHelper.InsertReading(req);
+                    {
+                        List<int> accelArr = JsonConvert.DeserializeObject<List<int>>(req.Val);
+                        double sampleRate = accelArr[accelArr.Count - 1] / 100.0;
+                        accelArr.RemoveAt(accelArr.Count - 1);
+                        
+                        List<double> accelDouble = new List<double>();
+                        foreach (int i in accelArr)
+                            accelDouble.Add(i / 1000.0);
+
+                        string serialArray = JsonConvert.SerializeObject(accelDouble);
+
+                        req.Val = serialArray;
+
+                        _dbHelper.InsertReading(req, sampleRate);
+
+                        Debug.WriteLine(accelArr);
+                    }
+                        
 
                     //var items = (from i in _clientsCollection
                     //             where i.MoteAddress == req.Address

@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Timers;
-using InteractiveDataDisplay.WPF;
 using System.Windows;
 using System.Diagnostics;
 using System.Globalization;
+using System.Windows.Input;
+using ClosedXML.Excel;
+using System.Data;
+using Microsoft.Win32;
 
 namespace MERT
 {
     public class MainWindowViewModel : BaseViewModel
     {
+        public ICommand ExportAllCommand { get; set; }
+        public ICommand ExportDataGridDataCommand { get; set; }
 
         public ObservableCollection<ListViewModel> MoteObservableCollection { get; set; }
 
@@ -54,6 +59,8 @@ namespace MERT
 
         public MainWindowViewModel()
         {
+            ExportAllCommand = new RelayCommand(ExportAllDatabaseData);
+            ExportDataGridDataCommand = new RelayCommand(ExportDataGridData);
             _dbHelper = new DbHelper();
 
             //Timer t = new Timer(UpdateMoteObservableCollection, new AutoResetEvent(false), 30000, Timeout.Infinite);
@@ -98,7 +105,7 @@ namespace MERT
 
             if(SelectTop2000Rows)
             {
-                SensorReadingsObservableCollection = _dbHelper.GetSensorReadingDataTable(SelectedAddress, typeFilter, null, null);
+                SensorReadingsObservableCollection = _dbHelper.GetSensorReadingModelCollection(SelectedAddress, typeFilter, null, null);
             }
 
             string minDTFilter;
@@ -110,7 +117,7 @@ namespace MERT
                 DateTime maxDT = DateTime.ParseExact(MaximumDateTimeFilter, "dddd, MMMM dd, yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
                 maxDTFilter = maxDT.ToString("yyyy-MM-dd HH:mm:ss");
 
-                SensorReadingsObservableCollection = _dbHelper.GetSensorReadingDataTable(SelectedAddress, typeFilter, minDTFilter, maxDTFilter);
+                SensorReadingsObservableCollection = _dbHelper.GetSensorReadingModelCollection(SelectedAddress, typeFilter, minDTFilter, maxDTFilter);
                 
             }
             catch (Exception ex)
@@ -192,6 +199,113 @@ namespace MERT
             Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Remove(a)));
             Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Remove(a)));
             AddArduino(a);
+        }
+
+        private string SaveFileDialog()
+        {
+            string filename = null;
+            // Configure save file dialog box
+            SaveFileDialog dlg = new SaveFileDialog();
+            //dlg.FileName = "Document"; // Default file name
+            //dlg.DefaultExt = ".text"; // Default file extension
+            dlg.Filter = "xlsx files (*.xlsx)|*.xlsx"; // Filter files by extension
+
+            // Show save file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                filename = dlg.FileName;
+            }
+            return filename;
+        }
+
+        private void ExportAllDatabaseData()
+        {
+            XLWorkbook workbook = new XLWorkbook();
+
+            //Add the DataTables to the workbook in thier own worksheets
+            workbook.Worksheets.Add(_dbHelper.GetMoteTableAsDataTable(), "Motes");
+            workbook.Worksheets.Add(_dbHelper.GetSensorReadingDataTable(), "Sensor Readings");
+
+            string filename = SaveFileDialog();
+
+            if (filename == null)
+                return;
+
+            try
+            {
+                workbook.SaveAs(filename);
+                Process.Start("explorer.exe", "/select," + filename);
+            }
+            catch (Exception ex)
+            {
+                string message = $"There was an error while trying write the Excel file to disk.\n\nThe File may be open and in use by another application.\n\nException Message:\n{ex.Message}";
+                Xceed.Wpf.Toolkit.MessageBox.Show("Error writing the file to disk!", message, MessageBoxButton.OK, MessageBoxImage.Question);
+            }
+        }
+
+        private void ExportDataGridData()
+        {
+            if (SelectedAddress < 0 || SelectedAddress > 15)
+                return;
+
+            XLWorkbook workbook = new XLWorkbook();
+
+            //Add the DataTables to the workbook in thier own worksheets
+            workbook.Worksheets.Add(_dbHelper.GetMoteTableAsDataTable(_selectedAddress.ToString()), "Mote");
+            workbook.Worksheets.Add(GetSensorFilteredDataTable(), "Sensor Readings");
+
+            string filename = SaveFileDialog();
+
+            if (filename == null)
+                return;
+
+            try
+            {
+                workbook.SaveAs(filename);
+                Process.Start("explorer.exe", "/select," + filename);
+            }
+            catch (Exception ex)
+            {
+                string message = $"There was an error while trying write the Excel file to disk.\n\nThe File may be open and in use by another application.\n\nException Message:\n{ex.Message}";
+                Xceed.Wpf.Toolkit.MessageBox.Show("Error writing the file to disk!", message, MessageBoxButton.OK, MessageBoxImage.Question);
+
+            }
+        }
+
+        private DataTable GetSensorFilteredDataTable()
+        {
+            
+            DataTable sensorReadings = new DataTable();
+
+            string typeFilter = SelectedReadingTypeFilter == null || SelectedReadingTypeFilter == "ALL" ? "" : SelectedReadingTypeFilter;
+
+            if (SelectTop2000Rows)
+            {
+                sensorReadings = _dbHelper.GetSensorReadingDataTableFiltered(SelectedAddress, typeFilter, null, null);
+            }
+
+            string minDTFilter;
+            string maxDTFilter;
+            try
+            {
+                DateTime minDT = DateTime.ParseExact(MinimumDateTimeFilter, "dddd, MMMM dd, yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
+                minDTFilter = minDT.ToString("yyyy-MM-dd HH:mm:ss");
+                DateTime maxDT = DateTime.ParseExact(MaximumDateTimeFilter, "dddd, MMMM dd, yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
+                maxDTFilter = maxDT.ToString("yyyy-MM-dd HH:mm:ss");
+
+                sensorReadings = _dbHelper.GetSensorReadingDataTableFiltered(SelectedAddress, typeFilter, minDTFilter, maxDTFilter);
+
+            }
+            catch (Exception ex)
+            {
+                //Debug.WriteLine(ex.Message);
+                //Debug.WriteLine(ex.StackTrace);
+            }
+            return sensorReadings;
         }
     }
 }

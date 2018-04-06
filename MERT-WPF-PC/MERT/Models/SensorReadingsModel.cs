@@ -12,6 +12,7 @@ namespace MERT
         public int Address { get; set; }
         public string Reading_Type { get; set; }
         public string Reading { get; set; }
+        public double Vib_Sample_Rate { get; set; }
         public string Date_Time { get; set; }
     }
 }

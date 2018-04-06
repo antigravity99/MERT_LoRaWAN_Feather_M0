@@ -10,7 +10,7 @@ namespace MERT
     {
         private int _address;
 
-        public int Address
+        public int Add
         {
             get { return _address; }
             set { _address = value; }
@@ -34,7 +34,7 @@ namespace MERT
 
         private string _value;
 
-        public string Value
+        public string Val
         {
             get { return _value; }
             set { _value = value; }

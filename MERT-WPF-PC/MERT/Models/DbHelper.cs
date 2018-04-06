@@ -19,6 +19,7 @@ namespace MERT
         const string C_ID = "Id";
         const string C_READING_TYPE = "Reading_Type";
         const string C_READING = "Reading";
+        const string C_VIB_SAMPLE_RATE = "Vib_Sample_Rate";
         const string C_DATE_TIME = "Date_Time";
         const string C_LAST_READING_SECONDS = "Last_Reading_Seconds";
         const string C_TEMP_ID = "TempId";
@@ -132,6 +133,18 @@ namespace MERT
             return dt;
         }
 
+        public DataTable GetMoteTableAsDataTable()
+        {
+            string statement = "SELECT * FROM MERTObjectsModel.dbo.Motes";
+            return GetDataTable(statement);
+        }
+
+        public DataTable GetMoteTableAsDataTable(string address)
+        {
+            string statement = $"SELECT * FROM MERTObjectsModel.dbo.Motes AS M WHERE M.Address = {address}";
+            return GetDataTable(statement);
+        }
+
         public ObservableCollection<ListViewModel> GetMotesbservableCollection()
         {
             ObservableCollection<ListViewModel> list = new ObservableCollection<ListViewModel>();
@@ -148,7 +161,7 @@ namespace MERT
                 {
                     MoteAddress = int.Parse(r[C_ADDRESS].ToString()),
                     MoteType = Values.DeviceTypes.Mote.ToString(),
-                    IsActive = seconds < 10 ? true : false
+                    IsActive = seconds < 15 ? true : false
                 };
 
                 list.Add(item);
@@ -156,40 +169,24 @@ namespace MERT
             return list;
         }
 
-        public ObservableCollection<SensorReadingsModel> GetSensorReadingDataTable(int address, string readingType, string minDateTime, string maxDateTime)
+        public ObservableCollection<SensorReadingsModel> GetSensorReadingModelCollection(int address, string readingType, string minDateTime, string maxDateTime)
         {
             ObservableCollection<SensorReadingsModel> list = new ObservableCollection<SensorReadingsModel>();
-            string statement;
-
-            if (minDateTime == null)
-            {
-                statement = "SELECT TOP(2000) ROW_NUMBER() OVER(ORDER BY Date_Time ASC) AS TempId, " +
-                                "SR.Address, SR.Reading_Type, SR.Reading, SR.Date_Time " +
-                                "FROM MERTObjectsModel.dbo.SensorReading AS SR " +
-                                $"WHERE SR.Address = {address} AND SR.Reading_Type LIKE '%{readingType}%' " +
-                                "ORDER BY SR.Date_Time DESC";
-            }
-            else
-            {
-                statement = "SELECT TOP(2000) ROW_NUMBER() OVER(ORDER BY Date_Time ASC) AS TempId, " +
-                                "SR.Address, SR.Reading_Type, SR.Reading, SR.Date_Time " +
-                                "FROM MERTObjectsModel.dbo.SensorReading AS SR " +
-                                $"WHERE SR.Address = {address} AND SR.Reading_Type LIKE '%{readingType}%' " +
-                                $"AND SR.Date_Time between '{minDateTime}' and '{maxDateTime}' " +
-                                "ORDER BY SR.Date_Time DESC";
-            }
             
 
-            DataTable dt = GetDataTable(statement);
+            DataTable dt = GetSensorReadingDataTableFiltered( address, readingType, minDateTime, maxDateTime);
 
             foreach (DataRow r in dt.Rows)
             {
+                double sampleRate = 0;
+                double.TryParse(r[C_VIB_SAMPLE_RATE].ToString(), out sampleRate);
                 var item = new SensorReadingsModel()
                 {
                     TempId = r[C_TEMP_ID].ToString(),
                     Address = int.Parse(r[C_ADDRESS].ToString()),
                     Reading_Type = r[C_READING_TYPE].ToString(),
                     Reading = r[C_READING].ToString(),
+                    Vib_Sample_Rate = sampleRate,
                     Date_Time = r[C_DATE_TIME].ToString()
                 };
 
@@ -197,18 +194,52 @@ namespace MERT
             }
             return list;
         }
-        
 
-        public void InsertReading(Request req)
+        public DataTable GetSensorReadingDataTableFiltered(int address, string readingType, string minDateTime, string maxDateTime)
+        {
+            string statement;
+
+            if (minDateTime == null)
+            {
+                statement = "SELECT TOP(2000) ROW_NUMBER() OVER(ORDER BY Date_Time ASC) AS TempId, " +
+                                "SR.Address, SR.Reading_Type, SR.Reading, SR.Vib_Sample_Rate, SR.Date_Time " +
+                                "FROM MERTObjectsModel.dbo.SensorReading AS SR " +
+                                $"WHERE SR.Address = {address} AND SR.Reading_Type LIKE '%{readingType}%' " +
+                                "ORDER BY SR.Date_Time DESC";
+            }
+            else
+            {
+                statement = "SELECT TOP(2000) ROW_NUMBER() OVER(ORDER BY Date_Time ASC) AS TempId, " +
+                                "SR.Address, SR.Reading_Type, SR.Reading, SR.Vib_Sample_Rate, SR.Date_Time " +
+                                "FROM MERTObjectsModel.dbo.SensorReading AS SR " +
+                                $"WHERE SR.Address = {address} AND SR.Reading_Type LIKE '%{readingType}%' " +
+                                $"AND SR.Date_Time between '{minDateTime}' and '{maxDateTime}' " +
+                                "ORDER BY SR.Date_Time DESC";
+            }
+            return GetDataTable(statement);
+        }
+
+        public DataTable GetSensorReadingDataTable()
+        {
+            
+            string statement = "SELECT * FROM MERTObjectsModel.dbo.SensorReading";
+            
+            return GetDataTable(statement);            
+        }
+
+
+
+        public void InsertReading(Request req, double sampleRate)
         {
             using (SqlConnection connection = new SqlConnection(CONNECTION_STRING))
             {
-                string insertSensor = "INSERT INTO MERTObjectsModel.dbo.SensorReading (Address, Reading_Type, Reading, Date_Time) VALUES (@Address, @Reading_Type, @Reading, SYSDATETIME())";
+                string insertSensor = "INSERT INTO MERTObjectsModel.dbo.SensorReading (Address, Reading_Type, Reading, Vib_Sample_Rate, Date_Time) VALUES (@Address, @Reading_Type, @Reading, @Vib_Sample_Rate, SYSDATETIME())";
                 using (SqlCommand command = new SqlCommand(insertSensor, connection))
                 {
-                    command.Parameters.AddWithValue("@Address", req.Address);
+                    command.Parameters.AddWithValue("@Address", req.Add);
                     command.Parameters.AddWithValue("@Reading_Type", req.Key);
-                    command.Parameters.AddWithValue("@Reading", req.Value);
+                    command.Parameters.AddWithValue("@Reading", req.Val);
+                    command.Parameters.AddWithValue("@Vib_Sample_Rate", sampleRate);
                     if (connection.State == ConnectionState.Closed)
                         connection.Open();
                     int result = command.ExecuteNonQuery();
@@ -219,7 +250,7 @@ namespace MERT
                     //connection.Close();
                 }
 
-                string updateMote = $"UPDATE MERTObjectsModel.dbo.Motes SET Last_Reading_Date_Time = SYSDATETIME() WHERE Address = {req.Address}";
+                string updateMote = $"UPDATE MERTObjectsModel.dbo.Motes SET Last_Reading_Date_Time = SYSDATETIME() WHERE Address = {req.Add}";
                 using (SqlCommand command = new SqlCommand(updateMote, connection))
                 {
                     if (connection.State == ConnectionState.Closed)

@@ -145,6 +145,7 @@ int16_t Adafruit_ADXL345_Unified::read16(uint8_t reg) {
 /**************************************************************************/
 uint8_t Adafruit_ADXL345_Unified::getDeviceID(void) {
   // Check device ID register
+  Serial.println(ADXL345_REG_DEVID);
   return readRegister(ADXL345_REG_DEVID);
 }
 
@@ -217,7 +218,6 @@ bool Adafruit_ADXL345_Unified::begin() {
     pinMode(_do, OUTPUT);
     pinMode(_di, INPUT);
   }
-
   /* Check connection */
   uint8_t deviceid = getDeviceID();
   if (deviceid != 0xE5)
@@ -226,10 +226,8 @@ bool Adafruit_ADXL345_Unified::begin() {
     Serial.println(deviceid, HEX);
     return false;
   }
-
   // Enable measurements
   writeRegister(ADXL345_REG_POWER_CTL, 0x08);
-
   return true;
 }
 
@@ -303,9 +301,11 @@ bool Adafruit_ADXL345_Unified::getEvent(sensors_event_t *event) {
   event->sensor_id = _sensorID;
   event->type      = SENSOR_TYPE_ACCELEROMETER;
   event->timestamp = 0;
-  event->acceleration.x = getX();// * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-  event->acceleration.y = getY();// * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
-  event->acceleration.z = getZ(); //* ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
+
+  //ENT498 We change x, y, z from floats to uint16_t in Adafruit_Sensor.h for sensors_event_t
+  event->acceleration.x = getX() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
+  event->acceleration.y = getY() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
+  event->acceleration.z = getZ() * ADXL345_MG2G_MULTIPLIER * SENSORS_GRAVITY_STANDARD;
 
   return true;
 }
