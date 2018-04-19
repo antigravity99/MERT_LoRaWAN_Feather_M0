@@ -1,10 +1,10 @@
-#include "Mert.h"
+#include "Reza.h"
 
-Mert::Mert()
+Reza::Reza()
 {
 }
 
-void Mert::init(bool isServer)
+void Reza::init(bool isServer)
 {
   if(isServer)
   {
@@ -33,17 +33,17 @@ void Mert::init(bool isServer)
   }
 }
 
-String Mert::getMoteType()
+String Reza::getMoteType()
 {
   return _moteType;
 }
 
-uint8_t Mert::getMoteAddress()
+uint8_t Reza::getMoteAddress()
 {
   return _moteAddress;
 }
 
-bool Mert::managerInit()
+bool Reza::managerInit()
 {
   if (!_manager.init())
   {
@@ -64,7 +64,7 @@ bool Mert::managerInit()
   return true;
 }
 
-String Mert::serailizeRequest(request_t req)
+String Reza::serailizeRequest(request_t req)
 {
   StaticJsonBuffer<500> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
@@ -81,7 +81,7 @@ String Mert::serailizeRequest(request_t req)
   // return root.measureLength();
 }
 
-bool Mert::sendtoWait(request_t req)
+bool Reza::sendtoWait(request_t req)
 {
   bool successful = false;
 
@@ -103,6 +103,8 @@ bool Mert::sendtoWait(request_t req)
     buff[168] = '"';
     buff[169] = '}';
     buff[170] = (uint8_t)0;
+
+    free(req.vibBuff);
   }
 
 
@@ -133,7 +135,6 @@ bool Mert::sendtoWait(request_t req)
       {
         successful = true;
       }
-
     }
     else
     {
@@ -151,12 +152,12 @@ bool Mert::sendtoWait(request_t req)
   #ifdef DEBUG_1
         Serial.print("Successful: "); Serial.println(successful);
   #endif
-  free(req.vibBuff);
+
   return successful;
 
 }
 
-bool Mert::recvfromAckTimeout(request_t *req, String *json)
+bool Reza::recvfromAckTimeout(request_t *req, String *json)
 {
   bool successful = false;
   // Wait for a message addressed to us from the client
@@ -209,6 +210,7 @@ bool Mert::recvfromAckTimeout(request_t *req, String *json)
     }
     else
     {
+      json->concat((char*)_rcvBuf);
       parseJsonRequest(req, (char *)_rcvBuf);
     }
     // _rcvBuf[38] = '"';
@@ -222,13 +224,13 @@ bool Mert::recvfromAckTimeout(request_t *req, String *json)
   }
   else
   {
-    Serial.println("recvfromAckTimeout faild");
+    Serial.println("recvfromAckTimeout failed");
     return successful;
   }
   return successful;
 }
 
-bool Mert::recvfromAck(request_t *req)
+bool Reza::recvfromAck(request_t *req)
 {
   bool successful = false;
   // Wait for a message addressed to us from the client
@@ -253,7 +255,7 @@ bool Mert::recvfromAck(request_t *req)
   return successful;
 }
 
-void Mert::checkSerial()
+void Reza::checkSerial()
 {
   String inputString = "";
   while (Serial.available())
@@ -274,7 +276,7 @@ void Mert::checkSerial()
 }
 
 /** Quick and dirty checksum **/
-char Mert::checksum(char* s)
+char Reza::checksum(char* s)
 {
   signed char sum = -1;
   while (*s != 0)
@@ -285,7 +287,7 @@ char Mert::checksum(char* s)
   return sum;
 }
 
-void Mert::serialEvent(String serialData)
+void Reza::serialEvent(String serialData)
 {
 
 #ifdef DEBUG_3
@@ -320,7 +322,7 @@ void Mert::serialEvent(String serialData)
     // processReq(req);
 }
 
-void Mert::processReq(request_t req)
+void Reza::processReq(request_t req)
 {
 #ifdef DEBUG_3
   Serial.print("cmd: ");
@@ -355,7 +357,7 @@ else if(req.cmd == UPDATE_CMD)
 //   }
 }
 
-void Mert::processUpdateCmd(request_t req)
+void Reza::processUpdateCmd(request_t req)
 {
 #ifdef DEBUG_1
   Serial.println("Got an update Command");
@@ -371,7 +373,7 @@ void Mert::processUpdateCmd(request_t req)
 
 }
 
-void Mert::processRequestCmd(request_t req)
+void Reza::processRequestCmd(request_t req)
 {
 #ifdef DEBUG_1
   Serial.println("Got a request Command");
@@ -400,10 +402,31 @@ void Mert::processRequestCmd(request_t req)
     // char req[251];
     // returnRequest(req, REQUEST_RESPONSE_CMD, TYPE_KEY, MY_TYPE);
   }
+  else if(req.key == String())
+  {
+#ifdef DEBUG_1
+    Serial.print("Process CMD type: ");
+    Serial.println(TYPE_KEY);
+#endif
+    request_t returnReq;
+    returnReq.address = _moteAddress;
+    returnReq.cmd = REQUEST_RESPONSE_CMD;
+    returnReq.key = TYPE_KEY;
+    returnReq.value = _moteType;
+    // returnReq.checksum = "";
+
+    // char *buff = (char *) malloc(sizeof(char) * 251);
+    String json = serailizeRequest(returnReq);
+    Serial.println(json);
+    // free(buff);
+
+    // char req[251];
+    // returnRequest(req, REQUEST_RESPONSE_CMD, TYPE_KEY, MY_TYPE);
+  }
 
 }
 
-void Mert::forwardMessage(uint8_t address, char message[])
+void Reza::forwardMessage(uint8_t address, char message[])
 {
   Serial.print("Send: " );
   Serial.println(message);
@@ -412,7 +435,7 @@ void Mert::forwardMessage(uint8_t address, char message[])
   Serial.println("Not yet implemented");
 }
 
-void Mert::parseJsonRequest(request_t *req, char *json)
+void Reza::parseJsonRequest(request_t *req, char *json)
 {
   StaticJsonBuffer<800> jsonBuffer;
 #ifdef DEBUG_1
@@ -434,19 +457,21 @@ void Mert::parseJsonRequest(request_t *req, char *json)
     // printRequestStruct(req);
 }
 
-temp_t Mert::getTemp()
+temp_t Reza::getTemp()
 {
   temp_t temp;
   // Output data to serial monitor
   temp.irTemp = _tmp007.readObjTempC();
-  Serial.print("Object Temperature: "); Serial.print(temp.irTemp); Serial.println("*C");
   temp.dieTemp = _tmp007.readDieTempC();
-  Serial.print("Die Temperature: "); Serial.print(temp.dieTemp); Serial.println("*C");
 
+#ifdef DEBUG_2
+  Serial.print("Object Temperature: "); Serial.print(temp.irTemp); Serial.println("*C");
+  Serial.print("Die Temperature: "); Serial.print(temp.dieTemp); Serial.println("*C");
+#endif
   return temp;
 }
 
-uint16_t* Mert::getAccelMagArray()
+uint16_t* Reza::getAccelMagArray()
 {
   uint16_t *buffer = (uint16_t*)malloc(sizeof(uint16_t) * 64);
 
@@ -482,7 +507,7 @@ uint16_t* Mert::getAccelMagArray()
 
 
 
-// uint8_t Mert::getAddress()
+// uint8_t Reza::getAddress()
 // {
 //   uint8_t val[4] = {0,0,1,0};
 //   uint8_t address = -1;
@@ -499,7 +524,7 @@ uint16_t* Mert::getAccelMagArray()
 // }
 
 
-uint8_t Mert::getAddress()
+uint8_t Reza::getAddress()
 {
   // Serial.println(digitalRead(DIP_4));
   // Serial.println(digitalRead(DIP_3));
@@ -520,7 +545,7 @@ uint8_t Mert::getAddress()
 }
 
 
-void Mert::printRequestStruct(request_t *req)
+void Reza::printRequestStruct(request_t *req)
 {
 // #ifdef DEBUG_2
   Serial.print("Address: ");
@@ -542,7 +567,7 @@ void Mert::printRequestStruct(request_t *req)
 }
 
 
-// void Mert::parseRequest(request *req, char* str)
+// void Reza::parseRequest(request *req, char* str)
 // {
 //   strcpy(req->message, str);
 //
@@ -607,7 +632,7 @@ void Mert::printRequestStruct(request_t *req)
 //     printRequestStruct(req);
 // }
 
-// void Mert::verifyChecksum(Request *req, char *token)
+// void Reza::verifyChecksum(Request *req, char *token)
 // {
   // String address = String(req->address);
   // //for the 2 !! and the 4 commas

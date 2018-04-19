@@ -113,3 +113,7 @@ C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bi
 C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\DocumentFormat.OpenXml.xml
 C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\ExcelNumberFormat.xml
 C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\System.Diagnostics.DiagnosticSource.xml
+C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\LentzArduinoManager.dll
+C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\bin\Debug\LentzArduinoManager.pdb
+C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\FlashFeatherBoardWindow.g.cs
+C:\Users\Josh Lentz\Documents\GitHub\MERT_LoRaWAN_Feather_M0\MERT-WPF-PC\MERT\obj\Debug\FlashFeatherBoardWindow.baml

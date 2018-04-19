@@ -7,7 +7,7 @@
         xmlns:d3="clr-namespace:InteractiveDataDisplay.WPF;assembly=InteractiveDataDisplay.WPF"
         xmlns:local="clr-namespace:MERT"
         mc:Ignorable="d"
-        Title="M.E.R.T." WindowState="Maximized" Height="800" Width="1200" MinHeight="800" MinWidth="1200" Icon="mert_icon.ico" >
+        Title="M.E.R.T." WindowState="Maximized" Height="750" Width="1200"  Icon="mert_icon.ico" >
     <Window.Resources>
         <local:MoteIsActiveBoolToBackgroundColorConverter x:Key="MoteIsActiveBoolToBackgroundColorConverter" />
         <local:MoteIsActiveBoolToStringConverter x:Key="MoteIsActiveBoolToStringConverter" />
@@ -19,7 +19,7 @@
                 <Separator />
                 <MenuItem Header="Export Datagrid Data" Command="{Binding ExportDataGridDataCommand}" />
                 <Separator />
-                <MenuItem Header="_Exit" />
+                <MenuItem Header="Flash Featherboard" Click="MenuItem_Click" />
             </MenuItem>
             <!--<MenuItem Header="_Edit">
                 <MenuItem Command="Cut" />
@@ -27,118 +27,126 @@
                 <MenuItem Command="Paste" />
             </MenuItem>-->
         </Menu>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="62*"/>
-            <RowDefinition Height="659*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
-        <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0.2,656.6" Grid.RowSpan="2">
-            <StackPanel Margin="10">
-                <Label Width="130">USB Server(s):</Label>
-                <ComboBox ItemsSource="{Binding ServerConnectDevicesObservableCollection}" >
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding ComPort}" />
-                                <TextBlock Text=" - Address: " />
-                                <TextBlock Text="{Binding Address}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
-            <StackPanel Margin="10">
-                <Label Width="130">USB Mote(s):</Label>
-                <ComboBox ItemsSource="{Binding ClientConnectDevicesObservableCollection}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding ComPort}" />
-                                <TextBlock Text=" - Address: " />
-                                <TextBlock Text="{Binding Address}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
-            <StackPanel Margin="10">
-                <Label Width="142">Unknown USB Device(s):</Label>
-                <ComboBox ItemsSource="{Binding UnknownConnectDevicesObservableCollection}" >
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding ComPort}" />
-                                <TextBlock Text=" - Address: " />
-                                <TextBlock Text="{Binding Address}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
-            <StackPanel Margin="10">
-                <Label>Reading Type Filter:</Label>
-                <ComboBox ItemsSource="{Binding SensorReadingTypes}" SelectedItem="{Binding SelectedReadingTypeFilter}" />
-            </StackPanel>
-            <Grid Margin="10" VerticalAlignment="Top">
-                <CheckBox IsChecked="{Binding SelectTop2000Rows}" Margin="0,27,0.2,-27.6">Select Top 2000 rows</CheckBox>
-            </Grid>
-            <StackPanel Margin="10">
-                <Label>Minimum DateTime:</Label>
-                <xctk:DateTimePicker Width="250" IsEnabled="{Binding DatePickerEnabled}" Text="{Binding MinimumDateTimeFilter}" />
-            </StackPanel>
-            <StackPanel Margin="10">
-                <Label>Maximum DateTime:</Label>
-                <xctk:DateTimePicker Width="250" IsEnabled="{Binding DatePickerEnabled}" Text="{Binding MaximumDateTimeFilter}" />
-            </StackPanel>
-        </StackPanel>
-        <Grid Grid.Column="0" Grid.Row="1">
+        <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="20"/>
-                <RowDefinition Height="500"/>
+                <RowDefinition Height="62*"/>
+                <RowDefinition Height="659*"/>
             </Grid.RowDefinitions>
-            <TextBlock  Text="Network Motes" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Margin="0,0,0,0" />
-            <ListView  Grid.Column="0" Grid.Row="1" ItemsSource="{Binding MoteObservableCollection}" SelectedIndex="{Binding SelectedAddress}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="0,0.2,-0.4,-172.4" >
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Width="200" Background="{Binding Path=IsActive, Converter={StaticResource MoteIsActiveBoolToBackgroundColorConverter}}" BorderBrush="Black" BorderThickness="2" Margin="2">
-                            <StackPanel Width="215" Orientation="Horizontal">
-                                <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
-                                <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="{Binding MoteAddress}" />
-                                    <TextBlock>
-                                        <TextBlock.Inlines>
-                                            <Run>Status:</Run>
-                                            <Run Text="{Binding Path=IsActive, Converter={StaticResource MoteIsActiveBoolToStringConverter}}" />
-                                        </TextBlock.Inlines>
-                                    </TextBlock>
-                                    <TextBlock>
-                                        <TextBlock.Inlines>
-                                            <Run>Type:</Run>
-                                            <Run Text="{Binding MoteType}" />
-                                        </TextBlock.Inlines>
-                                    </TextBlock>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0.2,656.6" Grid.RowSpan="2">
+                <StackPanel Margin="10">
+                    <Label Width="130">USB Server(s):</Label>
+                    <ComboBox ItemsSource="{Binding ServerConnectDevicesObservableCollection}" >
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding ComPort}" />
+                                    <TextBlock Text=" - Address: " />
+                                    <TextBlock Text="{Binding Address}" />
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Margin="10">
+                    <Label Width="130">USB Mote(s):</Label>
+                    <ComboBox ItemsSource="{Binding ClientConnectDevicesObservableCollection}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding ComPort}" />
+                                    <TextBlock Text=" - Address: " />
+                                    <TextBlock Text="{Binding Address}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Margin="10">
+                    <Label Width="142">Unknown USB Device(s):</Label>
+                    <ComboBox ItemsSource="{Binding UnknownConnectDevicesObservableCollection}" >
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding ComPort}" />
+                                    <TextBlock Text=" - Address: " />
+                                    <TextBlock Text="{Binding Address}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Margin="10">
+                    <Label>Reading Type Filter:</Label>
+                    <ComboBox ItemsSource="{Binding SensorReadingTypes}" SelectedItem="{Binding SelectedReadingTypeFilter}" />
+                </StackPanel>
+                <Grid Margin="10" VerticalAlignment="Top">
+                    <CheckBox IsChecked="{Binding SelectTop2000Rows}" Margin="0,27,0.2,-27.6">Select Top 2000 rows</CheckBox>
+                </Grid>
+                <StackPanel Margin="10">
+                    <Label>Minimum DateTime:</Label>
+                    <xctk:DateTimePicker Width="250" IsEnabled="{Binding DatePickerEnabled}" Text="{Binding MinimumDateTimeFilter}" />
+                </StackPanel>
+                <StackPanel Margin="10">
+                    <Label>Maximum DateTime:</Label>
+                    <xctk:DateTimePicker Width="250" IsEnabled="{Binding DatePickerEnabled}" Text="{Binding MaximumDateTimeFilter}" />
+                </StackPanel>
+            </StackPanel>
+            <DockPanel Grid.Column="0" Grid.Row="1">
+                <!--<Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="500"/>
+                </Grid.RowDefinitions>-->
+                <TextBlock  DockPanel.Dock="Top" Text="Network Motes" HorizontalAlignment="Center"  Margin="0,0,0,0" />
+                <ListView  DockPanel.Dock="Top" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="0 0 0 5" ItemsSource="{Binding MoteObservableCollection}" SelectedIndex="{Binding SelectedAddress}" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="200" Background="{Binding Path=IsActive, Converter={StaticResource MoteIsActiveBoolToBackgroundColorConverter}}" BorderBrush="Black" BorderThickness="2" Margin="2">
+                                <StackPanel Width="215" Orientation="Horizontal">
+                                    <Image Source="/Resources/mote_icon.png" VerticalAlignment="Center" Margin="2"/>
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="{Binding MoteAddress}" />
+                                        <TextBlock>
+                                            <TextBlock.Inlines>
+                                                <Run>Status:</Run>
+                                                <Run Text="{Binding Path=IsActive, Converter={StaticResource MoteIsActiveBoolToStringConverter}}" />
+                                            </TextBlock.Inlines>
+                                        </TextBlock>
+                                        <TextBlock>
+                                            <TextBlock.Inlines>
+                                                <Run>Type:</Run>
+                                                <Run Text="{Binding MoteType}" />
+                                            </TextBlock.Inlines>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </DockPanel>
+            <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1" Margin="5">
+                <DataGrid DockPanel.Dock="Top" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" x:Name="dataGrid" ItemsSource="{Binding SensorReadingsObservableCollection}" AutoGenerateColumns="True" HorizontalAlignment="Left" Height="300" SelectionChanged="dataGrid_SelectionChanged" Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="1" Margin="7,0,0,0" />
+                <TextBlock x:Name="dftText" Visibility="Hidden" DockPanel.Dock="Top" Margin="0 5 0 0" HorizontalAlignment="Center" >Calculating DFT...</TextBlock>
+                <ProgressBar DockPanel.Dock="Top" Height="15" Width="200" Visibility="Hidden" Margin="0 0 0 0" IsIndeterminate="True" HorizontalAlignment="Center" x:Name="progressBar" />
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0 0 0 0" HorizontalAlignment="Center">
+                    <CheckBox x:Name="dftCheckBox" Click="dftCheckBox_Click" >Convert to Frequency Domain  |</CheckBox>
+                    <TextBlock Margin="5 0 0 0">Zero Offset:</TextBlock>
+                    <TextBox x:Name="zeroOffsetTextBox" Margin="5 0 0 0" Width="100" PreviewTextInput="zeroOffsetTextBox_PreviewTextInput"></TextBox>
+                    <Button x:Name="refreshButton" Margin="5 0 0 0" Click="refreshButton_Click" >Refresh Graph</Button>
+                </StackPanel>
+                <d3:Chart DockPanel.Dock="Top" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" x:Name="plotter" Margin="0,0,10.4,0"  >
+                    <d3:Chart.Title>
+                        <TextBlock x:Name="graphTitle" HorizontalAlignment="Center" FontSize="18" Margin="0,5,0,5"><Run x:Name="graphRun" Text="Accelerometer Graph From Data Table"/></TextBlock>
+                    </d3:Chart.Title>
+                    <Grid x:Name="lines" />
+                </d3:Chart>
+            </DockPanel>
         </Grid>
-        <StackPanel Grid.Column="1" Grid.Row="1" Margin="5">
-            <DataGrid x:Name="dataGrid" MouseDoubleClick="Row_MouseDoubleClick" ItemsSource="{Binding SensorReadingsObservableCollection}" AutoGenerateColumns="True" Margin="0" HorizontalAlignment="Left" Height="300" Width="934" SelectionChanged="dataGrid_SelectionChanged" Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="1"/>
-            <d3:Chart x:Name="plotter" Margin="0,0,10,0" Height="360" >
-                <d3:Chart.Title>
-                    <TextBlock HorizontalAlignment="Center" FontSize="18" Margin="0,5,0,5"><Run Text="Accelerometer Graph From Data Table"/></TextBlock>
-                </d3:Chart.Title>
-                <Grid x:Name="lines" />
-            </d3:Chart>
-        </StackPanel>
-    </Grid>
 
     </DockPanel>
 </Window>

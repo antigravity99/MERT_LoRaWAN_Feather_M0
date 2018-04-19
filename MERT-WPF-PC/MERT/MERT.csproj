@@ -54,6 +54,9 @@
     <Reference Include="InteractiveDataDisplay.WPF, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\InteractiveDataDisplay.WPF.1.0.0\lib\net452\InteractiveDataDisplay.WPF.dll</HintPath>
     </Reference>
+    <Reference Include="LentzArduinoManager">
+      <HintPath>..\packages\LentzArduinoManager\LentzArduinoManager.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Maps.MapControl.WPF, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Maps.MapControl.WPF.1.0.0.3\lib\net40-Client\Microsoft.Maps.MapControl.WPF.dll</HintPath>
     </Reference>
@@ -178,16 +181,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="FlashFeatherBoardWindow.xaml.cs">
+      <DependentUpon>FlashFeatherBoardWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Models\Cmds.cs" />
     <Compile Include="Models\DbHelper.cs" />
     <Compile Include="Models\DSPLib.cs" />
     <Compile Include="Models\Keys.cs" />
-    <Compile Include="Models\LENTZ\Arduino.cs" />
-    <Compile Include="Models\LENTZ\ArduinoObservableCollection.cs" />
-    <Compile Include="Models\LENTZ\ArduinoManager.cs" />
-    <Compile Include="Models\LENTZ\ArduinoPropKeys.cs" />
+    <Compile Include="Models\FeatherBoard.cs" />
     <Compile Include="Models\ListViewModel.cs" />
-    <Compile Include="Models\LENTZ\StatesAndStatues.cs" />
     <Compile Include="Models\Request.cs" />
     <Compile Include="Models\SensorReadingsModel.cs" />
     <Compile Include="Models\TrulyObservableCollection.cs" />
@@ -197,6 +199,10 @@
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
     <Compile Include="ViewModels\Base\RelayCommand.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Page Include="FlashFeatherBoardWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

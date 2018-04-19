@@ -6,12 +6,12 @@ using System.Text;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Collections.Generic;
+using LentzArduinoManager;
 
 namespace MERT
 {
-    public class Arduino
+    public class FeatherBoard
     {
         public static readonly int MAX_ADDRESS = 99;
 
@@ -29,9 +29,9 @@ namespace MERT
 
         public event EventHandler TypeChanged;
 
-        public ManagementBaseObject MObject { get; private set; }
+        //public ManagementBaseObject MObject { get; private set; }
         public string ComPort { get; private set; }
-        public int Address { get; set; }
+        public int Address { get; private set; }
 
         public DeviceUSBStatus USBStatus { get; set; }
 
@@ -53,11 +53,20 @@ namespace MERT
 
         private DbHelper _dbHelper = new DbHelper();
 
-        public Arduino(ManagementBaseObject mbObject)
+        private Arduino _arduino;
+
+        public Arduino Arduino
         {
+            get { return _arduino; }
+            set { _arduino = value; }
+        }
+
+        public FeatherBoard(Arduino arduino)
+        {
+            _arduino = arduino;
+
             DeviceType = Values.DeviceTypes.Unknown;
-            MObject = mbObject;
-            string caption = MObject[ArduinoPropKeys.Caption].ToString();
+            string caption = _arduino.MObject[ArduinoPropKeys.Caption].ToString();
             int start = caption.IndexOf("COM");
             //Will return something like COM11
             string com = caption.Substring(start, 5);
@@ -97,21 +106,20 @@ namespace MERT
                 Debug.WriteLine(indata);
                 if (!indata.StartsWith("{\"Add"))
                     return;
-                Request req = JsonConvert.DeserializeObject<Request>(indata);
-
-                Address = req.Add;
+                Request req = JsonConvert.DeserializeObject<Request>(indata);                
 
                 if (req.Cmd.Equals(Cmds.REQUEST_RESPONSE_CMD))
                 {
                     if (req.Key.Equals(Keys.TYPE_KEY))
                     {
                         DeviceType = (Values.DeviceTypes)Enum.Parse(typeof(Values.DeviceTypes), req.Val);
+                        Address = req.Add;
                     }
                 }
                 else if (req.Cmd.Equals(Cmds.SEND_CMD) && _deviceType.Equals(Values.DeviceTypes.Server))
                 {
 
-                    if (req.Key.Equals(Keys.TEMP_IR_KEY) || req.Key.Equals(Keys.TEMP_DIE_KEY) || req.Key.Equals(Keys.VIBRATION_KEY))
+                    if (req.Key.Equals(Keys.VIBRATION_KEY))
                     {
                         List<int> accelArr = JsonConvert.DeserializeObject<List<int>>(req.Val);
                         double sampleRate = accelArr[accelArr.Count - 1] / 100.0;
@@ -128,6 +136,10 @@ namespace MERT
                         _dbHelper.InsertReading(req, sampleRate);
 
                         Debug.WriteLine(accelArr);
+                    }
+                    else if(req.Key.Equals(Keys.TEMP_IR_KEY) || req.Key.Equals(Keys.TEMP_DIE_KEY))
+                    {
+                        _dbHelper.InsertReading(req, null);
                     }
                         
 

@@ -1,23 +1,24 @@
-#include "Mert.h"
+#include "Reza.h"
 
 #define SERVER
 
-int count = 0;
 
+int count = 0;
+//
 void server();
 void client();
 uint8_t getAddress();
 
 Adafruit_TMP007 tmp007;
-Mert mert;
+Reza reza;
 
 void setup()
 {
   delay(5000);
 #ifdef SERVER
-  mert.init(true);
+  reza.init(true);
 #else
-  mert.init(false);
+  reza.init(false);
 #endif
 
   pinMode(RFM95_RST, OUTPUT);
@@ -33,7 +34,7 @@ void setup()
 
   Serial.begin(9600);
   //while (!Serial) ; // Wait for serial port to be available
-  if(!mert.managerInit())
+  if(!reza.managerInit())
   {
     Serial.println("Error init");
     while(1);
@@ -56,45 +57,55 @@ void server()
 {
   request_t req;
   String json;
-  if (mert.recvfromAckTimeout(&req, &json))
+  if (reza.recvfromAckTimeout(&req, &json))
   {
-    // mert.printRequestStruct(&req);
+    // reza.printRequestStruct(&req);
     Serial.println(json);
   }
-  mert.checkSerial();
+  reza.checkSerial();
   // delay(50);
 }
 #else
 void client()
 {
-  // Temp t = mert.getTemp();
-  // uint16_t m = mert.getAccelMag();
+  uint16_t *vibBuff = reza.getAccelMagArray();
 
-  // String accelArr = mert.getAccelMagArray();
+  request_t reqAccel;
+  reqAccel.address = reza.getMoteAddress();
+  reqAccel.cmd = SEND_CMD;
+  reqAccel.key = VIBRATION_KEY;
+  reqAccel.value = "";
+  reqAccel.vibBuff = vibBuff;
 
-  uint16_t *vibBuff = mert.getAccelMagArray();
+  reza.sendtoWait(reqAccel);
 
+  temp_t temp = reza.getTemp();
 
-  request_t req;
-  req.address = mert.getMoteAddress();
-  req.cmd = SEND_CMD;
-  req.key = VIBRATION_KEY;
-  req.value = "";
-  req.vibBuff = vibBuff;
-  // req.key = TEMP_IR_KEY;
-  // req.value = String(t.irTemp);
+  request_t reqDie;
+  reqDie.address = reza.getMoteAddress();
+  reqDie.cmd = SEND_CMD;
+  reqDie.key = TEMP_DIE_KEY;
+  reqDie.value = String(temp.dieTemp);
 
+  reza.sendtoWait(reqDie);
+
+  request_t reqIR;
+  reqIR.address = reza.getMoteAddress();
+  reqIR.cmd = SEND_CMD;
+  reqIR.key = TEMP_IR_KEY;
+  reqIR.value = String(temp.irTemp);
+
+  reza.sendtoWait(reqIR);
 
   // Serial.print("IR temp: "); Serial.println(t.irTemp);
   // Serial.print("Die temp: "); Serial.println(t.dieTemp);
-  // Serial.print("Accel magnitude: "); Serial.println(m);
 
   // Send a message to manager_server
-  if (mert.sendtoWait(req))
-  {
-
-  }
-  delay(1000);
-  // mert.checkSerial();
+  // if (reza.sendtoWait(req))
+  // {
+  //
+  // }
+  delay(3000);
+  reza.checkSerial();
 }
 #endif

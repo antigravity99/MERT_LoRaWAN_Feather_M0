@@ -8,6 +8,8 @@ using System.Windows.Input;
 using ClosedXML.Excel;
 using System.Data;
 using Microsoft.Win32;
+using LentzArduinoManager;
+using System.Linq;
 
 namespace MERT
 {
@@ -15,18 +17,24 @@ namespace MERT
     {
         public ICommand ExportAllCommand { get; set; }
         public ICommand ExportDataGridDataCommand { get; set; }
+        public ICommand FlashServerCommand { get; set; }
+        public ICommand FlashMoteCommand { get; set; }
+        public ICommand FlashUnknownCommand { get; set; }
 
         public ObservableCollection<ListViewModel> MoteObservableCollection { get; set; }
 
-        public ObservableCollection<Arduino> UnknownConnectDevicesObservableCollection { get; set; }
-        public ObservableCollection<Arduino> ServerConnectDevicesObservableCollection { get; set; }
-        public ObservableCollection<Arduino> ClientConnectDevicesObservableCollection { get; set; }
+        public ObservableCollection<FeatherBoard> UnknownConnectDevicesObservableCollection { get; set; }
+        public ObservableCollection<FeatherBoard> ServerConnectDevicesObservableCollection { get; set; }
+        public ObservableCollection<FeatherBoard> ClientConnectDevicesObservableCollection { get; set; }
 
         public ObservableCollection<SensorReadingsModel> SensorReadingsObservableCollection { get; set; }
 
         public ObservableCollection<string> SensorReadingTypes { get; private set; }
 
+        public ObservableCollection<string> ElfTypes { get; private set; }
+
         public string SelectedReadingTypeFilter { get; set; }
+        public string SelectedFlashConfig { get; set; }
         public string MinimumDateTimeFilter { get; set; }
         public string MaximumDateTimeFilter { get; set; }
 
@@ -61,6 +69,10 @@ namespace MERT
         {
             ExportAllCommand = new RelayCommand(ExportAllDatabaseData);
             ExportDataGridDataCommand = new RelayCommand(ExportDataGridData);
+            FlashServerCommand = new RelayCommand(FlashSelectedServer);
+            FlashMoteCommand = new RelayCommand(FlashSelectedMote);
+            FlashUnknownCommand = new RelayCommand(FlashUnknownServer);
+
             _dbHelper = new DbHelper();
 
             //Timer t = new Timer(UpdateMoteObservableCollection, new AutoResetEvent(false), 30000, Timeout.Infinite);
@@ -72,12 +84,21 @@ namespace MERT
             timerGridViewRefresh.Elapsed += new ElapsedEventHandler(UpdateGridViewData);
             timerGridViewRefresh.Enabled = true;            
 
-            UnknownConnectDevicesObservableCollection = new ObservableCollection<Arduino>();
-            ServerConnectDevicesObservableCollection = new ObservableCollection<Arduino>();
-            ClientConnectDevicesObservableCollection = new ObservableCollection<Arduino>();
+            UnknownConnectDevicesObservableCollection = new ObservableCollection<FeatherBoard>();
+            ServerConnectDevicesObservableCollection = new ObservableCollection<FeatherBoard>();
+            ClientConnectDevicesObservableCollection = new ObservableCollection<FeatherBoard>();
 
             SensorReadingsObservableCollection = new ObservableCollection<SensorReadingsModel>();
 
+            ElfTypes = new ObservableCollection<string>();
+            ElfTypes.Add("Server");
+            ElfTypes.Add("Mote All");
+            ElfTypes.Add("Ambient Temp");
+            ElfTypes.Add("IR Temp");
+            ElfTypes.Add("Vibration");
+            ElfTypes.Add("Ambient & IR Temp");
+            ElfTypes.Add("Ambient Temp & Vibration");
+            ElfTypes.Add("IR Temp & Vibration");
 
             SensorReadingTypes = new ObservableCollection<string>();
             SensorReadingTypes.Add("ALL");
@@ -87,7 +108,7 @@ namespace MERT
 
             //MoteObservableCollection.CollectionChanged += MoteActiveStatusChanged;
 
-            ArduinoManager am = new ArduinoManager();
+            ArduinoManager am = new ArduinoManager("USB Serial Device (COM");
 
             MoteObservableCollection = _dbHelper.GetMotesbservableCollection();
 
@@ -152,8 +173,9 @@ namespace MERT
         {
             foreach (Arduino a in am.ConnectedDevices)
             {
-                a.TypeChanged += ArduinoTypeChanged;
-                AddArduino(a);
+                FeatherBoard f = new FeatherBoard(a);
+                f.TypeChanged += DeviceTypeChanged;
+                AddArduino(f);
             }
 
             am.DeviceAdded += DeviceAdded;
@@ -163,42 +185,71 @@ namespace MERT
 
         private void DeviceAdded(object o, EventArgs e)
         {
-            Arduino a = (Arduino)o;
-            AddArduino(a);
+            FeatherBoard f = new FeatherBoard((Arduino)o);
+            AddArduino(f);
         }
 
-        private void AddArduino(Arduino a)
+        private void AddArduino(FeatherBoard f)
         { 
-            a.TypeChanged += ArduinoTypeChanged;
-            if (a.DeviceType == Values.DeviceTypes.Unknown)
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Add(a)));
-            else if (a.DeviceType == Values.DeviceTypes.Server)
+            f.TypeChanged += DeviceTypeChanged;
+            if (f.DeviceType == Values.DeviceTypes.Unknown)
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Add(f)));
+            else if (f.DeviceType == Values.DeviceTypes.Server)
             {
-                a.ClientsCollection = MoteObservableCollection;
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Add(a)));
+                f.ClientsCollection = MoteObservableCollection;
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Add(f)));
             }
             else
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Add(a)));
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Add(f)));
         }
 
         private void DeviceRemoved(object o, EventArgs e)
         {
-            Arduino a = (Arduino)o;
-            if (a.DeviceType == Values.DeviceTypes.Unknown)
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Remove(a)));
-            else if (a.DeviceType == Values.DeviceTypes.Server)
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Remove(a)));
+            FeatherBoard f = FindFeatheBoard((Arduino)o);
+
+            if (f == null)
+                return;
+        
+            if (f.DeviceType == Values.DeviceTypes.Unknown)
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Remove(f)));
+            else if (f.DeviceType == Values.DeviceTypes.Server)
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Remove(f)));
             else
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Remove(a)));
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Remove(f)));
         }
 
-        private void ArduinoTypeChanged(object o, EventArgs e)
+
+        private FeatherBoard FindFeatheBoard(Arduino a)
         {
-            Arduino a = (Arduino)o;
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Remove(a)));
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Remove(a)));
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Remove(a)));
-            AddArduino(a);
+            FeatherBoard f = null;
+            var s = ServerConnectDevicesObservableCollection.Where(x => x.Arduino == a).ToList();
+            var c = ClientConnectDevicesObservableCollection.Where(x => x.Arduino == a).ToList();
+            var u = UnknownConnectDevicesObservableCollection.Where(x => x.Arduino == a).ToList();
+            if (s.Count != 0)
+            {
+                f = s[0];
+            }
+            else if (c.Count != 0)
+            {
+                f = c[0];
+            }
+            else if (u.Count != 0)
+            {
+                f = u[0];
+            }
+
+            return f;
+
+        }
+
+        private void DeviceTypeChanged(object o, EventArgs e)
+        {
+            FeatherBoard f = (FeatherBoard)o;
+
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ServerConnectDevicesObservableCollection.Remove(f)));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => this.ClientConnectDevicesObservableCollection.Remove(f)));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => this.UnknownConnectDevicesObservableCollection.Remove(f)));
+            AddArduino(f);
         }
 
         private string SaveFileDialog()
@@ -306,6 +357,22 @@ namespace MERT
                 //Debug.WriteLine(ex.StackTrace);
             }
             return sensorReadings;
+        }
+
+
+        private void FlashSelectedServer()
+        {
+            MessageBox.Show("Flash Server!");
+        }
+
+        private void FlashUnknownServer()
+        {
+            MessageBox.Show("Flash Unknown!");
+        }
+
+        private void FlashSelectedMote()
+        {
+            MessageBox.Show("Flash Mote!");
         }
     }
 }

@@ -11,7 +11,7 @@
 //Debugging Serial prints
 // #define DEBUG_1
 // #define DEBUG_2
-#define DEBUG_3
+// #define DEBUG_3
 
 /* for feather m0 */
 #define RFM95_CS 8
@@ -80,8 +80,8 @@ typedef struct
   float dieTemp;
 } temp_t;
 
-//Mert communication class
-class Mert
+//Reza communication class
+class Reza
 {
 
   private:
@@ -107,7 +107,7 @@ class Mert
 
   public:
     //public methods
-    Mert();
+    Reza();
     void init(bool isServer);
     String getMoteType();
     uint8_t getMoteAddress();

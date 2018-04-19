@@ -229,13 +229,14 @@ namespace MERT
 
 
 
-        public void InsertReading(Request req, double sampleRate)
+        public void InsertReading(Request req, double? sampleRate)
         {
             using (SqlConnection connection = new SqlConnection(CONNECTION_STRING))
             {
                 string insertSensor = "INSERT INTO MERTObjectsModel.dbo.SensorReading (Address, Reading_Type, Reading, Vib_Sample_Rate, Date_Time) VALUES (@Address, @Reading_Type, @Reading, @Vib_Sample_Rate, SYSDATETIME())";
                 using (SqlCommand command = new SqlCommand(insertSensor, connection))
                 {
+                    sampleRate = sampleRate == null ? 0.0 : sampleRate; 
                     command.Parameters.AddWithValue("@Address", req.Add);
                     command.Parameters.AddWithValue("@Reading_Type", req.Key);
                     command.Parameters.AddWithValue("@Reading", req.Val);
