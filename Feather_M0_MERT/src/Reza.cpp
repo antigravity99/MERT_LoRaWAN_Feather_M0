@@ -1,8 +1,6 @@
 #include "Reza.h"
 
-Reza::Reza()
-{
-}
+Reza::Reza(){}
 
 void Reza::init(bool isServer)
 {
@@ -33,21 +31,10 @@ void Reza::init(bool isServer)
   }
 }
 
-String Reza::getMoteType()
-{
-  return _moteType;
-}
-
-uint8_t Reza::getMoteAddress()
-{
-  return _moteAddress;
-}
-
 bool Reza::managerInit()
 {
   if (!_manager.init())
   {
-    //driver.setModeTx()
     Serial.println("init failed");
     return false;
   }
@@ -59,9 +46,34 @@ bool Reza::managerInit()
       while (1);
     }
     Serial.print("Set Freq to: "); Serial.println(FREQ);
+    //http://www.airspayce.com/mikem/arduino/RadioHead/classRH__RF95.html#ab273e242758e3cc2ed2679ef795a7196
+    //http://www.airspayce.com/mikem/arduino/RadioHead/classRH__RF95.html#ab9605810c11c025758ea91b2813666e3
+
+    //http://www.hoperf.com/upload/rf/RFM95_96_97_98W.pdf
+    //Note that the spreading factor,
+    //SpreadingFactor, must be known in advance on both transmit and receive sides of the link as different spreading factors are orthogonal to each other
+    //Default Bw125Cr45Sf128
+    //_driver.setModemConfig(RH_RF95::Bw31_25Cr48Sf512);  //set for pre-configured long range
+    //After init(), the power will be set to 13dBm, with useRFO false (ie PA_BOOST enabled). See documentation link above
+    //dBm to mw conversion table http://www.fab-corp.com/pages.php?pageid=1
+    //not sure going over 20dBm really makes much difference. Looking at the RH_RF95.cpp and RH_RF95.h files and the
+    //set setTxPower method comments seem to indicate that there should be be the current consuption does not indicate this
+    // _driver.setTxPower(20, false);  //set for 100mw
     //driver.setTxPower(23, false);
+    //TX power register is 9 and will be 0x88 by default, which is equal to 13dBm (per the documentation);
+    _driver.printRegisters();  //Print all the RFM95 register values
   }
   return true;
+}
+
+String Reza::getMoteType()
+{
+  return _moteType;
+}
+
+uint8_t Reza::getMoteAddress()
+{
+  return _moteAddress;
 }
 
 String Reza::serailizeRequest(request_t req)
@@ -77,8 +89,29 @@ String Reza::serailizeRequest(request_t req)
   String s;
   root.printTo(s);
   return s;
-
   // return root.measureLength();
+}
+
+void Reza::deserializeJsonRequest(request_t *req, char *json)
+{
+  StaticJsonBuffer<800> jsonBuffer;
+#ifdef DEBUG_1
+  Serial.print("ParseJsonRequest json: ");
+   Serial.println(json);
+#endif
+  JsonObject &root = jsonBuffer.parseObject(json);
+  if (!root.success())
+    Serial.println("Could not parse the json message!");
+
+    // root.prettyPrintTo(Serial);
+
+    req->address = root[ADDRESS];
+    req->cmd = root[CMD].as<String>();
+    req->key = root[KEY].as<String>();
+    req->value = root[VALUE].as<String>();
+    // req->checksum = root[CHECKSUM].as<String>();
+
+    // printRequestStruct(req);
 }
 
 bool Reza::sendtoWait(request_t req)
@@ -89,8 +122,14 @@ bool Reza::sendtoWait(request_t req)
   char buff[171];
   json.toCharArray(buff, json.length()+1);
 
+  //currently set to send the 64 Accelerometer samples
+  //The indexes should be changed to be dynamically set based on the length of the
+  //samples array instead of hard coded. Also, you can send up to 105 samples,
+  //where the last sample is actually the average sample rate
   if(req.key == VIBRATION_KEY)
   {
+    //This breaks the 16bit integers into its uppper and lower bytes and
+    //stores them as a char and then appends/inserts them to the VAL string
     uint8_t j = 0;
     for (uint8_t i = 38; i < 168; i++)
     {
@@ -100,8 +139,10 @@ bool Reza::sendtoWait(request_t req)
       // Serial.println(buff[i]);
       buff[i] = lo;
     }
+    //close off the json string since it was overwritten
     buff[168] = '"';
     buff[169] = '}';
+    //null char to end the json string
     buff[170] = (uint8_t)0;
 
     free(req.vibBuff);
@@ -121,27 +162,28 @@ bool Reza::sendtoWait(request_t req)
   if (_manager.sendtoWait((uint8_t*)buff, sizeof(buff), SERVER_ADDRESS))
   {
     // Now wait for a reply from the server
-    uint8_t len = sizeof(_rcvBuf);
-    uint8_t from;
-    if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
-    {
-#ifdef DEBUG_1
-      Serial.print("got reply from : 0x");
-      Serial.print(from, HEX);
-      Serial.print(": ");
-      Serial.println((char*)_rcvBuf);
-#endif
-      if(String((char*)_rcvBuf) == String(ACK))
-      {
-        successful = true;
-      }
-    }
-    else
-    {
-#ifdef DEBUG_1
-      Serial.println("No reply, is rf95_reliable_datagram_server running?");
-#endif
-    }
+    // uint8_t len = sizeof(_rcvBuf);
+    // uint8_t from;
+    //Decided not to wait for an acknowledgement
+//     if (_manager.recvfromAckTimeout(_rcvBuf, &len, 2000, &from))
+//     {
+// #ifdef DEBUG_1
+//       Serial.print("got reply from : 0x");
+//       Serial.print(from, HEX);
+//       Serial.print(": ");
+//       Serial.println((char*)_rcvBuf);
+// #endif
+//       if(String((char*)_rcvBuf) == String(ACK))
+//       {
+//         successful = true;
+//       }
+//     }
+//     else
+//     {
+// #ifdef DEBUG_1
+//       Serial.println("No reply, is rf95_reliable_datagram_server running?");
+// #endif
+//     }
   }
   else
   {
@@ -206,21 +248,20 @@ bool Reza::recvfromAckTimeout(request_t *req, String *json)
 
       char buff[json->length()];
       json->toCharArray(buff, json->length()+1);
-      parseJsonRequest(req, buff);
+      deserializeJsonRequest(req, buff);
     }
     else
     {
       json->concat((char*)_rcvBuf);
-      parseJsonRequest(req, (char *)_rcvBuf);
+      deserializeJsonRequest(req, (char *)_rcvBuf);
     }
-    // _rcvBuf[38] = '"';
-    // _rcvBuf[39] = '}';
 
-     //Send a reply back to the originator client
      successful = true;
-     uint8_t ackBuff[] = "ack";
-     if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
-      Serial.println("sendtoWait failed");
+     //Decided not to send an acknowledgement
+     //Send a reply back to the originator client
+     // uint8_t ackBuff[] = "ack";
+     // if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
+     //  Serial.println("sendtoWait failed");
   }
   else
   {
@@ -245,12 +286,15 @@ bool Reza::recvfromAck(request_t *req)
     Serial.print("Data: ");
     Serial.println((char*)_rcvBuf);
 #endif
-    parseJsonRequest(req, (char*)_rcvBuf);
-    //Send a reply back to the originator client
+    deserializeJsonRequest(req, (char*)_rcvBuf);
+
+
     successful = true;
-    uint8_t ackBuff[] = "ack";
-    if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
-    Serial.println("sendtoWait failed");
+    //Decided not to send an acknowledgement
+    //Send a reply back to the originator client
+    // uint8_t ackBuff[] = "ack";
+    // if (!_manager.sendtoWait(ackBuff, sizeof(ackBuff), from))
+    //   Serial.println("sendtoWait failed");
   }
   return successful;
 }
@@ -275,17 +319,18 @@ void Reza::checkSerial()
   }
 }
 
+//no longer used
 /** Quick and dirty checksum **/
-char Reza::checksum(char* s)
-{
-  signed char sum = -1;
-  while (*s != 0)
-  {
-    sum += *s;
-    s++;
-  }
-  return sum;
-}
+// char Reza::checksum(char* s)
+// {
+//   signed char sum = -1;
+//   while (*s != 0)
+//   {
+//     sum += *s;
+//     s++;
+//   }
+//   return sum;
+// }
 
 void Reza::serialEvent(String serialData)
 {
@@ -300,7 +345,7 @@ void Reza::serialEvent(String serialData)
   int len = serialData.length();
   char buff[len+1];
   serialData.toCharArray(buff, len+1);
-  parseJsonRequest(&req, buff);
+  deserializeJsonRequest(&req, buff);
   processReq(req);
 
   // Serial.print("JSON to struct key: ");
@@ -339,22 +384,6 @@ if(req.cmd == REQUEST_CMD)
   processRequestCmd(req);
 else if(req.cmd == UPDATE_CMD)
   processUpdateCmd(req);
-
-//   switch((int)req.cmd.charAt(0))
-//   {
-//     case (int)UPDATE_CMD[0]:
-//       processUpdateCmd(req);
-//       break;
-//     case (int)REQUEST_CMD[0]:
-// #ifdef DEBUG_2
-//       Serial.println("Got a request Command");
-// #endif
-//       processRequestCmd(req);
-//       break;
-//     default:
-//       Serial.println("Not a valid command");
-//       break;
-//   }
 }
 
 void Reza::processUpdateCmd(request_t req)
@@ -396,7 +425,10 @@ void Reza::processRequestCmd(request_t req)
 
     // char *buff = (char *) malloc(sizeof(char) * 251);
     String json = serailizeRequest(returnReq);
+#ifdef DEBUG_1
     Serial.println(json);
+#endif
+
     // free(buff);
 
     // char req[251];
@@ -417,7 +449,9 @@ void Reza::processRequestCmd(request_t req)
 
     // char *buff = (char *) malloc(sizeof(char) * 251);
     String json = serailizeRequest(returnReq);
-    Serial.println(json);
+    #ifdef DEBUG_1
+        Serial.println(json);
+    #endif
     // free(buff);
 
     // char req[251];
@@ -433,28 +467,6 @@ void Reza::forwardMessage(uint8_t address, char message[])
   Serial.print("To address: ");
   Serial.println(address);
   Serial.println("Not yet implemented");
-}
-
-void Reza::parseJsonRequest(request_t *req, char *json)
-{
-  StaticJsonBuffer<800> jsonBuffer;
-#ifdef DEBUG_1
-  Serial.print("ParseJsonRequest json: ");
-   Serial.println(json);
-#endif
-  JsonObject &root = jsonBuffer.parseObject(json);
-  if (!root.success())
-    Serial.println("Could not parse the json message!");
-
-    // root.prettyPrintTo(Serial);
-
-    req->address = root[ADDRESS];
-    req->cmd = root[CMD].as<String>();
-    req->key = root[KEY].as<String>();
-    req->value = root[VALUE].as<String>();
-    // req->checksum = root[CHECKSUM].as<String>();
-
-    // printRequestStruct(req);
 }
 
 temp_t Reza::getTemp()

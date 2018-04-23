@@ -9,9 +9,9 @@
 // #include <SPI.h>
 
 //Debugging Serial prints
-// #define DEBUG_1
-// #define DEBUG_2
-// #define DEBUG_3
+#define DEBUG_1
+#define DEBUG_2
+#define DEBUG_3
 
 /* for feather m0 */
 #define RFM95_CS 8
@@ -83,7 +83,6 @@ typedef struct
 //Reza communication class
 class Reza
 {
-
   private:
     //Privarte class variables
     String _moteType;
@@ -100,10 +99,10 @@ class Reza
     uint8_t _sendBuff[256];
     Adafruit_ADXL345_Unified _accel;
     Adafruit_TMP007 _tmp007;
-
     //Private method
     char checksum(char* s);
     String serailizeRequest(request_t req);
+    void deserializeJsonRequest(request_t *req, char* str);
 
   public:
     //public methods
@@ -120,7 +119,6 @@ class Reza
     // void returnRequest(char req[], char cmd[], char key[], char value[]);
     void forwardMessage(uint8_t address, char message[]);
     // void parseRequest(request *req, char* str);//maybe able to delete this
-    void parseJsonRequest(request_t *req, char* str);
     void printRequestStruct(request_t *req);
     bool sendtoWait(request_t req);
     bool recvfromAckTimeout(request_t *req, String *json);
@@ -129,5 +127,4 @@ class Reza
     uint8_t getAddress();
     temp_t getTemp();
     uint16_t* getAccelMagArray();
-
 };

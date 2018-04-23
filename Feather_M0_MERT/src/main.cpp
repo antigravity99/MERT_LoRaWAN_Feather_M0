@@ -1,10 +1,7 @@
 #include "Reza.h"
 
-#define SERVER
+// #define SERVER
 
-
-int count = 0;
-//
 void server();
 void client();
 uint8_t getAddress();
@@ -28,9 +25,6 @@ void setup()
   pinMode(DIP_2, INPUT_PULLUP);
   pinMode(DIP_3, INPUT_PULLUP);
   pinMode(DIP_4, INPUT_PULLUP);
-  // pinMode(13, INPUT_PULLUP);
-  // pinMode(5, OUTPUT);
-  // digitalWrite(5, HIGH);
 
   Serial.begin(9600);
   //while (!Serial) ; // Wait for serial port to be available
@@ -59,7 +53,6 @@ void server()
   String json;
   if (reza.recvfromAckTimeout(&req, &json))
   {
-    // reza.printRequestStruct(&req);
     Serial.println(json);
   }
   reza.checkSerial();
@@ -97,14 +90,6 @@ void client()
 
   reza.sendtoWait(reqIR);
 
-  // Serial.print("IR temp: "); Serial.println(t.irTemp);
-  // Serial.print("Die temp: "); Serial.println(t.dieTemp);
-
-  // Send a message to manager_server
-  // if (reza.sendtoWait(req))
-  // {
-  //
-  // }
   delay(3000);
   reza.checkSerial();
 }
