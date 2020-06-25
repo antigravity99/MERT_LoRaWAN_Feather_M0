@@ -10,6 +10,7 @@ using System.Data;
 using Microsoft.Win32;
 using LentzArduinoManager;
 using System.Linq;
+using System.IO;
 
 namespace MERT
 {
@@ -373,6 +374,63 @@ namespace MERT
         private void FlashSelectedMote()
         {
             MessageBox.Show("Flash Mote!");
+            Uri uri = new Uri("pack://application:,,,/Resources/mote_all.bin");
         }
+
+        //    private bool LoadAccelSketch(Uri uri)
+        //    {
+
+        //        string strTempFile = Path.GetTempFileName();
+        //        string hexFile = Path.GetDirectoryName(strTempFile) + $"\\{}";
+        //        if (File.Exists(hexFile))
+        //            File.Delete(hexFile);
+
+
+
+        //        File.WriteAllBytes(strTempFile, Properties.Resources);
+        //        File.Copy(strTempFile, hexFile, true);
+        //        File.Delete(strTempFile);
+
+        //        StringBuilder args = new StringBuilder();
+
+        //        args.Append(@"""-CC:\Program Files (x86)\Arduino\hardware\tools\avr\etc\avrdude.conf"" ");
+        //        args.Append("-v -patmega328p -carduino -P");
+        //        args.Append(comboBoxAvailablePortsAccel.Text);
+        //        args.Append(" -b115200 -D -Uflash:w:");
+        //        args.Append("\"");
+        //        args.Append(hexFile);
+        //        args.Append("\"");
+        //        args.Append(":i");
+
+        //        string st = args.ToString();
+        //        //Console.WriteLine("Args:\n {0}", args.ToString());
+
+        //        Process process = new Process();
+
+        //        process.StartInfo.FileName = @"""C:\Program Files (x86)\Arduino\hardware\tools\avr\bin\avrdude.exe""";
+        //        process.StartInfo.Arguments = args.ToString();
+        //        //process.StartInfo.RedirectStandardInput = true;
+        //        process.StartInfo.RedirectStandardOutput = true;
+        //        process.StartInfo.RedirectStandardError = true;
+        //        process.StartInfo.CreateNoWindow = true;
+        //        process.StartInfo.UseShellExecute = false;
+        //        //process.OutputDataReceived += new DataReceivedEventHandler((sender, e) =>
+        //        //{
+        //        //    // Prepend line numbers to each line of the output. 
+        //        //    if (!String.IsNullOrEmpty(e.Data))
+        //        //    {
+        //        //        //lineCount++;
+        //        //        //output.Append("\n[" + lineCount + "]: " + e.Data);
+        //        //        richTextBox1.AppendText(e.Data);
+        //        //    }
+        //        //});
+        //        process.Start();
+        //        string output = process.StandardError.ReadToEnd();
+        //        richTextBox1.AppendText(output);
+        //        //process.BeginOutputReadLine();
+        //        process.WaitForExit();
+        //        process.Close();
+        //        return output.Contains("avrdude: 5722 bytes of flash verified");
+        //    }
     }
 }

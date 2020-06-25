@@ -96,10 +96,6 @@ namespace MERT
         private void SerialDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             SerialPort sp = (SerialPort)sender;
-
-            //int bs = sp.ReadBufferSize;
-            //Debug.WriteLine("buffer size: " + bs);
-
             try
             {
                 string indata = sp.ReadLine();

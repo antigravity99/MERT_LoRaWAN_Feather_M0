@@ -228,7 +228,6 @@ namespace MERT
         }
 
 
-
         public void InsertReading(Request req, double? sampleRate)
         {
             using (SqlConnection connection = new SqlConnection(CONNECTION_STRING))
@@ -244,11 +243,9 @@ namespace MERT
                     if (connection.State == ConnectionState.Closed)
                         connection.Open();
                     int result = command.ExecuteNonQuery();
-
                     // Check Error
                     if (result < 0)
                         Debug.WriteLine("Error inserting data into Database!");
-                    //connection.Close();
                 }
 
                 string updateMote = $"UPDATE MERTObjectsModel.dbo.Motes SET Last_Reading_Date_Time = SYSDATETIME() WHERE Address = {req.Add}";
@@ -261,7 +258,6 @@ namespace MERT
                     // Check Error
                     if (result < 0)
                         Debug.WriteLine("Error inserting data into Database!");
-                    //connection.Close();
                 }
             }
         }

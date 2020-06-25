@@ -239,6 +239,8 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Resources\mote_all.bin" />
+    <None Include="Resources\server.bin" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

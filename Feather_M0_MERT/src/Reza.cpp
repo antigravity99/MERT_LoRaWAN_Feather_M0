@@ -131,12 +131,15 @@ bool Reza::sendtoWait(request_t req)
     //This breaks the 16bit integers into its uppper and lower bytes and
     //stores them as a char and then appends/inserts them to the VAL string
     uint8_t j = 0;
-    for (uint8_t i = 38; i < 168; i++)
+    //if the address is > 9 then i = 39;
+    uint8_t start = 38;
+    if(req.address > 9)
+      start = 39;
+    for (uint8_t i = start; i < 168; i++)
     {
       char lo = req.vibBuff[j] & 0xFF;
       char hi = req.vibBuff[j++] >> 8;
       buff[i++] = hi;
-      // Serial.println(buff[i]);
       buff[i] = lo;
     }
     //close off the json string since it was overwritten
@@ -144,7 +147,6 @@ bool Reza::sendtoWait(request_t req)
     buff[169] = '}';
     //null char to end the json string
     buff[170] = (uint8_t)0;
-
     free(req.vibBuff);
   }
 
@@ -485,30 +487,21 @@ temp_t Reza::getTemp()
 
 uint16_t* Reza::getAccelMagArray()
 {
-  uint16_t *buffer = (uint16_t*)malloc(sizeof(uint16_t) * 64);
-
+  uint16_t *buffer = (uint16_t*)malloc(sizeof(uint16_t) * VIB_SAMPLES);
   unsigned long t = micros();
-
   for (uint8_t i = 0; i < VIB_SAMPLES-1; i++)
   {
     // /* Get a new sensor event */
     sensors_event_t event;
     _accel.getEvent(&event);
-
     /* Display the results (acceleration is measured in m/s^2) */
-    //changed to be int instead of m/s^
     // Serial.println("Accelerometer readings are:");
     // Serial.print("X: "); Serial.print(event.acceleration.x); Serial.print("  ");
     // Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print("  ");
-    // Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print("  ");Serial.println("m/s^2 ");
-
-    // uint16_t mag = ;
-    buffer[i] = sqrt((event.acceleration.x * event.acceleration.x) + (event.acceleration.y * event.acceleration.y) + (event.acceleration.z * event.acceleration.z)) * 1000;
-
-    //Makes the sample rate 300Hz
-    // delayMicroseconds(1662);
+    buffer[i] = sqrt((event.acceleration.x * event.acceleration.x) +
+                      (event.acceleration.y * event.acceleration.y) +
+                      (event.acceleration.z * event.acceleration.z)) * 1000;
   }
-
   double sampleRate = 1 / ((micros() - t) / 1000000.0 / VIB_SAMPLES);
 #ifdef DEBUG_3
   Serial.print("Sample rate: "); Serial.print(sampleRate); Serial.println("Hz");

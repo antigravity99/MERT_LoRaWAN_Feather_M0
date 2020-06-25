@@ -94,3 +94,24 @@ void client()
   reza.checkSerial();
 }
 #endif
+void test()
+{
+  //Create an instance of Reza
+  Reza reza;
+  //Initialise the class
+  //True for server - False for mote
+  reza.init(false);
+  //Initialise the LoRaWAN radio manager from the RadioHead library
+  reza.managerInit();
+
+  //Create an instace of a request struct
+  request_t request;
+  request.address = reza.getMoteAddress();
+  request.cmd = SEND_CMD;
+  request.key = VIBRATION_KEY;
+  request.value = "";
+  request.vibBuff = (uint16_t*) reza.getAccelMagArray();
+
+  //Send the data
+  reza.sendtoWait(request);
+}
